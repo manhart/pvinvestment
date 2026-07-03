@@ -9,7 +9,7 @@ Betroffene Klassen:
 - `PvAssumptions`: `annualRevenue`, `annualOperatingCosts`
 - `BatteryModel`: `annualRevenue`, `annualOperatingCosts`
 - `FinancingAssumptions`: `annualInterest`, `annualRepayment`
-- `TaxAssumptions`: `annualTaxPayment`, `acquisitionCost`, `capitalizableAncillaryCosts`, `immediatelyDeductibleCosts`, `iabAmount`
+- `TaxAssumptions`: `annualTaxPayment`, `acquisitionCost`, `capitalizableAncillaryCosts`, `immediatelyDeductibleCosts`, `iabAmount`, `iabEligibleAcquisitionCost`, `iabEligibleCapitalizableAncillaryCosts`
 - `SavingsPlanAssumptions`: `startingCapital`, `monthlyContribution`, `annualContribution`
 - `TaxCalculationResult`, `CalculationResult`, `MonthResult` und `YearResult`: Ergebnis-Geldwerte
 
@@ -18,7 +18,7 @@ Prozentwerte werden aktuell als Dezimalzahlen zwischen `0.0` und `1.0` erwartet:
 - `0.35` bedeutet 35 Prozent.
 - `35` ist nicht gueltig.
 - Basispunkte wie `3500` werden nicht akzeptiert.
-- Betroffene Felder: Steuersatz, AfA-Saetze, Batterieanteile, Kostenanteile, Reinvestitionsrate.
+- Betroffene Felder: Steuersatz, IAB-Satz, AfA-Saetze, Batterieanteile, Kostenanteile, Reinvestitionsrate.
 
 ## Rundungsrisiken
 
@@ -48,6 +48,7 @@ Auf Cent zu runden:
 Nicht vorschnell runden:
 
 - AfA-Basis
+- IAB-Basis
 - Monatsfaktoren
 - anteilige Monatswerte innerhalb einer Jahresrechnung
 - technische Zwischenwerte fuer kWh, kWp, Wirkungsgrad, Degradation, Anteilssaetze

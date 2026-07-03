@@ -8,6 +8,8 @@ Die Steuerlogik soll modular und parametergetrieben aufgebaut werden. Der Rechne
 - Cashflow und Steuerberechnung verwenden konsistente Zinswerte.
 - Kapitalisierbare Anschaffungs- und Anschaffungsnebenkosten erhoehen die AfA-Basis und werden nicht zusaetzlich sofort abgezogen.
 - Sofort abzugsfaehige Kosten werden getrennt von aktivierungspflichtigen Kosten erfasst.
+- Maklercourtage oder Vermittlungsprovision wird im Standard als aktivierungspflichtige Anschaffungsnebenkosten behandelt, wenn sie dem Erwerb des beguenstigten Wirtschaftsguts zuzuordnen ist.
+- Aktivierungspflichtige Anschaffungsnebenkosten gehoeren im Standard auch zur IAB-relevanten Investitionsbasis.
 - Steuerzahlungen und Steuererstattungen haben einen konfigurierbaren Zeitversatz.
 
 ## Parameter
@@ -17,6 +19,8 @@ Die Steuerlogik soll modular und parametergetrieben aufgebaut werden. Der Rechne
 - Steuersatz nach Ruhestand
 - IAB aktiv/inaktiv
 - IAB-Prozentsatz
+- IAB-Basis aus beguenstigten Anschaffungs-/Herstellungskosten
+- manuell abweichende IAB-beguenstigte Anschaffungskosten oder Nebenkosten
 - IAB-Jahr
 - Sonder-AfA aktiv/inaktiv
 - Sonder-AfA-Prozentsatz
@@ -67,12 +71,17 @@ Das steuerliche Anlageverzeichnis trennt diese Verantwortung:
 
 ## IAB
 
-Der Investitionsabzugsbetrag wird als eigenes Modul geplant:
+Der Investitionsabzugsbetrag ist parametrisierbar:
 
 - aktivierbar oder deaktivierbar
-- frei konfigurierbarer Prozentsatz
+- frei konfigurierbarer Prozentsatz ueber `iabRate`
+- expliziter Betrag ueber `iabAmount`, falls ein Betrag statt Prozentsatz vorgegeben werden soll
 - eigenes Jahr der steuerlichen Wirkung
+- IAB-Basis aus `iabEligibleAcquisitionCost + iabEligibleCapitalizableAncillaryCosts`
+- Standard-IAB-Basis: `acquisitionCost + capitalizableAncillaryCosts`
 - transparente Rueckgaengigmachung oder Verrechnung in spaeteren Jahren
+
+Sofort abzugsfaehige Kosten gehoeren nicht zur IAB-Basis. Maklercourtage/Vermittlungsprovision wird ohne abweichende manuelle Vorgabe als `capitalizableAncillaryCosts` erfasst und ist damit AfA- und IAB-basisrelevant. Fuer Sonderfaelle kann `iabEligibleCapitalizableAncillaryCosts` niedriger angesetzt werden, zum Beispiel `0.0`, ohne die AfA-Basis zu veraendern.
 
 ## Sonder-AfA
 

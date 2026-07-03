@@ -6,8 +6,8 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 
 | Feldgruppe | Felder | Einheit |
 | --- | --- | --- |
-| Geldwerte | `annualRevenue`, `annualOperatingCosts`, `annualInterest`, `annualRepayment`, `annualTaxPayment`, `acquisitionCost`, `capitalizableAncillaryCosts`, `immediatelyDeductibleCosts`, `iabAmount`, `batteryCapex`, `batteryReplacementCost`, Ergebnis-Geldwerte | Euro als Dezimalzahl |
-| Prozent/Shares | `incomeTaxRate`, `taxRateByYear`, AfA-Saetze, `decliningBalanceRate`, Sonder-AfA-Verteilung, `investorRevenueShare`, `operatorRevenueShare`, `investorCostShare`, `operatorCostShare`, `investorCapexShare`, `operatorCapexShare`, `investorReplacementCostShare`, `operatorReplacementCostShare`, `batteryDegradationRatePerYear`, `positiveCashflowReinvestmentRate` | Dezimalzahl zwischen 0 und 1 |
+| Geldwerte | `annualRevenue`, `annualOperatingCosts`, `annualInterest`, `annualRepayment`, `annualTaxPayment`, `acquisitionCost`, `capitalizableAncillaryCosts`, `immediatelyDeductibleCosts`, `iabAmount`, `iabEligibleAcquisitionCost`, `iabEligibleCapitalizableAncillaryCosts`, `batteryCapex`, `batteryReplacementCost`, Ergebnis-Geldwerte | Euro als Dezimalzahl |
+| Prozent/Shares | `incomeTaxRate`, `taxRateByYear`, `iabRate`, AfA-Saetze, `decliningBalanceRate`, Sonder-AfA-Verteilung, `investorRevenueShare`, `operatorRevenueShare`, `investorCostShare`, `operatorCostShare`, `investorCapexShare`, `operatorCapexShare`, `investorReplacementCostShare`, `operatorReplacementCostShare`, `batteryDegradationRatePerYear`, `positiveCashflowReinvestmentRate` | Dezimalzahl zwischen 0 und 1 |
 | Jahre | `calculationYear`, IAB-Jahre, AfA-Jahre, Timing-Jahre, `taxPaymentYear` | Kalenderjahr als Integer |
 | Monate | Timing-Monate, `depreciationStartMonth`, `annualSavingsPlanContributionMonth`, `capexPaymentMonth`, `batteryReplacementMonth`, `taxPaymentDelayMonths`, `taxCashflowMonth`, `usefulLifeMonths`, `depreciationMonths` | Kalendermonat 1 bis 12 bzw. Monatsanzahl als Integer |
 | Monatsfaktoren | `revenueMonthFactor`, `interestMonthFactor`, `repaymentMonthFactor`, `savingsPlanContributionMonthFactor` | Dezimalfaktor zwischen 0 und 1 |
@@ -40,6 +40,9 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 
 - `capitalizableAncillaryCosts` erhoehen nur die AfA-Basis.
 - `immediatelyDeductibleCosts` werden nur im steuerlichen Einkommen abgezogen.
+- Maklercourtage/Vermittlungsprovision wird im Standard als `capitalizableAncillaryCosts` modelliert, wenn sie dem Erwerb des beguenstigten Wirtschaftsguts zuzuordnen ist. Damit gehoert sie zur AfA-Basis und zur IAB-Basis.
+- Die IAB-Basis ist standardmaessig `acquisitionCost + capitalizableAncillaryCosts`. Sofort abzugsfaehige Kosten gehoeren nicht dazu.
+- Fuer abweichende steuerliche Wuerdigungen kann die IAB-Basis ueber `iabEligibleAcquisitionCost` und `iabEligibleCapitalizableAncillaryCosts` manuell enger gefasst werden, ohne die AfA-Basis zu veraendern.
 - `iabDeduction` reduziert das steuerliche Einkommen im IAB-Abzugsjahr.
 - `iabAddition` erhoeht das steuerliche Einkommen im Hinzurechnungsjahr.
 - `iabAcquisitionCostReduction` mindert die AfA-Basis ab dem Hinzurechnungsjahr.

@@ -22,6 +22,9 @@ final class TaxAssumptions
         public readonly float $decliningDepreciationRate = 0.0,
         public readonly bool $iabEnabled = false,
         public readonly float $iabAmount = 0.0,
+        public readonly float $iabRate = 0.0,
+        public readonly ?float $iabEligibleAcquisitionCost = null,
+        public readonly ?float $iabEligibleCapitalizableAncillaryCosts = null,
         public readonly int $iabDeductionYear = 2025,
         public readonly int $iabAdditionYear = 2026,
         public readonly bool $specialDepreciationEnabled = false,
@@ -46,10 +49,22 @@ final class TaxAssumptions
             'linearDepreciationRate' => $linearDepreciationRate,
             'decliningDepreciationRate' => $decliningDepreciationRate,
             'iabAmount' => $iabAmount,
+            'iabRate' => $iabRate,
             'specialDepreciationRate' => $specialDepreciationRate,
             'maxLossCarryBackAmount' => $maxLossCarryBackAmount,
         ] as $label => $value) {
             if($value < 0.0) {
+                throw new InvalidArgumentException($label.' must not be negative.');
+            }
+        }
+        if($iabRate > 1.0) {
+            throw new InvalidArgumentException('IAB rate must not exceed 1.');
+        }
+        foreach([
+            'iabEligibleAcquisitionCost' => $iabEligibleAcquisitionCost,
+            'iabEligibleCapitalizableAncillaryCosts' => $iabEligibleCapitalizableAncillaryCosts,
+        ] as $label => $value) {
+            if($value !== null && $value < 0.0) {
                 throw new InvalidArgumentException($label.' must not be negative.');
             }
         }
@@ -107,5 +122,23 @@ final class TaxAssumptions
     public function taxRateForYear(int $year): float
     {
         return $this->taxRateByYear[$year] ?? $this->incomeTaxRate;
+    }
+
+    public function iabEligibleInvestmentBasis(): float
+    {
+        return ($this->iabEligibleAcquisitionCost ?? $this->acquisitionCost)
+            + ($this->iabEligibleCapitalizableAncillaryCosts ?? $this->capitalizableAncillaryCosts);
+    }
+
+    public function effectiveIabAmount(): float
+    {
+        if(!$this->iabEnabled) {
+            return 0.0;
+        }
+
+        $basis = $this->iabEligibleInvestmentBasis();
+        $requestedAmount = $this->iabAmount > 0.0 ? $this->iabAmount : $basis * $this->iabRate;
+
+        return min($requestedAmount, $basis);
     }
 }

@@ -28,6 +28,7 @@ final class TaxCalculationResult
         public readonly float $taxableResultAfterLoss = 0.0,
         public readonly int $taxCashflowYear = 0,
         public readonly int $taxCashflowMonth = 12,
+        public readonly float $iabEligibleInvestmentBasis = 0.0,
     ) {}
 
     public function totalDepreciation(): float

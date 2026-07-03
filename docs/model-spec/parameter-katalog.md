@@ -35,6 +35,7 @@ Die folgenden Startzeitpunkte sind unabhaengig voneinander zu erfassen:
 - Degradation pro Jahr
 - Investitionskosten PV
 - aktivierbare Anschaffungsnebenkosten
+- Maklercourtage/Vermittlungsprovision als aktivierbare Anschaffungsnebenkosten, sofern dem Erwerb des Wirtschaftsguts zuzuordnen
 - sofort abzugsfaehige Kosten
 - laufende Betriebskosten
 - Wartung
@@ -83,6 +84,9 @@ Die folgenden Startzeitpunkte sind unabhaengig voneinander zu erfassen:
 - Steuersatz vor und nach Ruhestand
 - IAB aktiv/inaktiv
 - IAB-Prozentsatz
+- IAB-Basis
+- IAB-beguenstigte Anschaffungskosten
+- IAB-beguenstigte aktivierungspflichtige Anschaffungsnebenkosten
 - IAB-Jahr
 - Sonder-AfA aktiv/inaktiv
 - Sonder-AfA-Prozentsatz
@@ -121,4 +125,3 @@ Die folgenden Startzeitpunkte sind unabhaengig voneinander zu erfassen:
 - Gesamtvermoegenseffekt
 - Renditekennzahlen
 - Szenariovergleich
-

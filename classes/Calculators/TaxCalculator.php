@@ -54,12 +54,14 @@ final class TaxCalculator
                 taxableResultAfterLoss: 0.0,
                 taxCashflowYear: $taxCashflowYear,
                 taxCashflowMonth: $taxCashflowMonth,
+                iabEligibleInvestmentBasis: 0.0,
             );
         }
 
         $batteryAllocation = $batteryModel->annualAllocation();
         $taxableRevenue = $pvAssumptions->revenueForMonthFactor($revenueMonthFactor) + ($batteryAllocation['investorRevenue'] * $revenueMonthFactor);
         $deductibleOperatingCosts = $pvAssumptions->operatingCostsForMonthFactor($revenueMonthFactor) + ($batteryAllocation['investorCosts'] * $revenueMonthFactor);
+        $iabEligibleInvestmentBasis = $taxAssumptions->iabEligibleInvestmentBasis();
         $iabDeduction = $this->iabDeduction($taxAssumptions);
         $iabAddition = $this->iabAddition($taxAssumptions);
         $iabAcquisitionCostReduction = $this->iabAcquisitionCostReduction($taxAssumptions);
@@ -119,6 +121,7 @@ final class TaxCalculator
             taxableResultAfterLoss: $taxYearResult->taxableResultAfterLoss,
             taxCashflowYear: $taxYearResult->taxCashflowYear,
             taxCashflowMonth: $taxYearResult->taxCashflowMonth,
+            iabEligibleInvestmentBasis: $iabEligibleInvestmentBasis,
         );
     }
 
@@ -184,7 +187,7 @@ final class TaxCalculator
         if(!$taxAssumptions->iabEnabled || $taxAssumptions->calculationYear !== $taxAssumptions->iabDeductionYear) {
             return 0.0;
         }
-        return $taxAssumptions->iabAmount;
+        return $taxAssumptions->effectiveIabAmount();
     }
 
     private function iabAddition(TaxAssumptions $taxAssumptions): float
@@ -192,7 +195,7 @@ final class TaxCalculator
         if(!$taxAssumptions->iabEnabled || $taxAssumptions->calculationYear !== $taxAssumptions->iabAdditionYear) {
             return 0.0;
         }
-        return $taxAssumptions->iabAmount;
+        return $taxAssumptions->effectiveIabAmount();
     }
 
     private function iabAcquisitionCostReduction(TaxAssumptions $taxAssumptions): float
@@ -200,6 +203,9 @@ final class TaxCalculator
         if(!$taxAssumptions->iabEnabled || $taxAssumptions->calculationYear < $taxAssumptions->iabAdditionYear) {
             return 0.0;
         }
-        return min($taxAssumptions->iabAmount, $taxAssumptions->acquisitionCost + $taxAssumptions->capitalizableAncillaryCosts);
+        return min(
+            $taxAssumptions->effectiveIabAmount(),
+            $taxAssumptions->acquisitionCost + $taxAssumptions->capitalizableAncillaryCosts,
+        );
     }
 }

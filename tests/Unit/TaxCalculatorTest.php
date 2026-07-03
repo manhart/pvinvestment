@@ -15,6 +15,103 @@ use pvinvestment\classes\Domain\TaxAssumptions;
 
 final class TaxCalculatorTest extends TestCase
 {
+    public function testIabBasisIncludesCapitalizableAncillaryBrokerageCosts(): void
+    {
+        $result = $this->taxCalculator()->calculate(
+            taxAssumptions: new TaxAssumptions(
+                calculationYear: 2025,
+                incomeTaxRate: 0.40,
+                acquisitionCost: 200000.0,
+                capitalizableAncillaryCosts: 8000.0,
+                iabEnabled: true,
+                iabRate: 0.50,
+                iabDeductionYear: 2025,
+                iabAdditionYear: 2026,
+            ),
+            pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+            batteryModel: BatteryModel::none(),
+            financingAssumptions: new FinancingAssumptions(),
+        );
+
+        self::assertSame(208000.0, $result->iabEligibleInvestmentBasis);
+        self::assertSame(104000.0, $result->iabDeduction);
+        self::assertSame(-104000.0, $result->taxableIncome);
+    }
+
+    public function testCapitalizableBrokerageIsNotDeductedImmediatelyByDefault(): void
+    {
+        $result = $this->taxCalculator()->calculate(
+            taxAssumptions: new TaxAssumptions(
+                calculationYear: 2025,
+                incomeTaxRate: 0.40,
+                acquisitionCost: 200000.0,
+                capitalizableAncillaryCosts: 8000.0,
+                immediatelyDeductibleCosts: 0.0,
+                iabEnabled: true,
+                iabRate: 0.50,
+                iabDeductionYear: 2025,
+                iabAdditionYear: 2026,
+            ),
+            pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+            batteryModel: BatteryModel::none(),
+            financingAssumptions: new FinancingAssumptions(),
+        );
+
+        self::assertSame(208000.0, $result->capitalizableAcquisitionCosts);
+        self::assertSame(0.0, $result->immediatelyDeductibleCosts);
+        self::assertSame(208000.0, $result->iabEligibleInvestmentBasis);
+        self::assertSame(104000.0, $result->iabDeduction);
+        self::assertSame(-104000.0, $result->taxableResultBeforeLoss);
+    }
+
+    public function testImmediatelyDeductibleCostsAreExcludedFromIabBasis(): void
+    {
+        $result = $this->taxCalculator()->calculate(
+            taxAssumptions: new TaxAssumptions(
+                calculationYear: 2025,
+                incomeTaxRate: 0.40,
+                acquisitionCost: 200000.0,
+                capitalizableAncillaryCosts: 8000.0,
+                immediatelyDeductibleCosts: 3000.0,
+                iabEnabled: true,
+                iabRate: 0.50,
+                iabDeductionYear: 2025,
+                iabAdditionYear: 2026,
+            ),
+            pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+            batteryModel: BatteryModel::none(),
+            financingAssumptions: new FinancingAssumptions(),
+        );
+
+        self::assertSame(208000.0, $result->iabEligibleInvestmentBasis);
+        self::assertSame(104000.0, $result->iabDeduction);
+        self::assertSame(-107000.0, $result->taxableResultBeforeLoss);
+    }
+
+    public function testCapitalizableBrokerageCanBeManuallyExcludedFromIabBasis(): void
+    {
+        $result = $this->taxCalculator()->calculate(
+            taxAssumptions: new TaxAssumptions(
+                calculationYear: 2025,
+                incomeTaxRate: 0.40,
+                acquisitionCost: 200000.0,
+                capitalizableAncillaryCosts: 8000.0,
+                iabEnabled: true,
+                iabRate: 0.50,
+                iabEligibleCapitalizableAncillaryCosts: 0.0,
+                iabDeductionYear: 2025,
+                iabAdditionYear: 2026,
+            ),
+            pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+            batteryModel: BatteryModel::none(),
+            financingAssumptions: new FinancingAssumptions(),
+        );
+
+        self::assertSame(208000.0, $result->capitalizableAcquisitionCosts);
+        self::assertSame(200000.0, $result->iabEligibleInvestmentBasis);
+        self::assertSame(100000.0, $result->iabDeduction);
+    }
+
     public function testTaxCalculationWithoutIabSeparatesCapitalizableAndImmediatelyDeductibleCosts(): void
     {
         $result = $this->taxCalculator()->calculate(
@@ -180,4 +277,3 @@ final class TaxCalculatorTest extends TestCase
         return new TaxCalculator();
     }
 }
-
