@@ -27,6 +27,11 @@ final class YearResult
         public readonly float $savingsTax,
         public readonly float $savingsEndValue,
         public readonly float $freeCashflowAfterSavings,
+        public readonly float $batteryCapexInvestor = 0.0,
+        public readonly float $batteryReplacementCapexInvestor = 0.0,
+        public readonly float $batteryDegradationFactor = 1.0,
+        public readonly float $batteryRevenueBeforeDegradation = 0.0,
+        public readonly float $batteryRevenueAfterDegradation = 0.0,
     ) {}
 
     /**
@@ -52,6 +57,11 @@ final class YearResult
             'savingsTax' => $this->savingsTax,
             'savingsEndValue' => $this->savingsEndValue,
             'freeCashflowAfterSavings' => $this->freeCashflowAfterSavings,
+            'batteryCapexInvestor' => $this->batteryCapexInvestor,
+            'batteryReplacementCapexInvestor' => $this->batteryReplacementCapexInvestor,
+            'batteryDegradationFactor' => $this->batteryDegradationFactor,
+            'batteryRevenueBeforeDegradation' => $this->batteryRevenueBeforeDegradation,
+            'batteryRevenueAfterDegradation' => $this->batteryRevenueAfterDegradation,
             'months' => array_map(static fn(MonthResult $month): array => $month->toArray(), $this->months),
         ];
     }

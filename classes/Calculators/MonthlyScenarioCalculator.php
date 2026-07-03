@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace pvinvestment\classes\Calculators;
 
+use pvinvestment\classes\Domain\BatteryModel;
 use pvinvestment\classes\Domain\ProjectTimingAssumptions;
 use pvinvestment\classes\Domain\Results\MonthResult;
 use pvinvestment\classes\Domain\Scenario\ScenarioInput;
@@ -27,7 +28,6 @@ final class MonthlyScenarioCalculator
 
         $taxByPaymentMonth = $this->taxCashflowsByPaymentMonth($scenario, $sourceTiming, $baseYear, $endYear);
         $depreciationByMonth = $this->depreciationByMonth($scenario, $sourceTiming, $baseYear, $endYear);
-        $batteryAllocation = $scenario->batteryModel->annualAllocation();
         $revenueStart = new YearMonth($sourceTiming->revenueStartYear, $sourceTiming->revenueStartMonth);
         $interestStart = new YearMonth($sourceTiming->interestStartYear, $sourceTiming->interestStartMonth);
         $repaymentStart = new YearMonth($sourceTiming->repaymentStartYear, $sourceTiming->repaymentStartMonth);
@@ -36,6 +36,7 @@ final class MonthlyScenarioCalculator
         $months = [];
         $savingsValue = $scenario->savingsPlanAssumptions->startingCapital;
         for($year = $baseYear; $year <= $endYear; $year++) {
+            $batteryAllocation = $scenario->batteryModel->annualAllocationForYear($year, $sourceTiming->revenueStartYear);
             for($month = 1; $month <= 12; $month++) {
                 $current = new YearMonth($year, $month);
                 $hasRevenue = $current->isOnOrAfter($revenueStart);
@@ -47,6 +48,10 @@ final class MonthlyScenarioCalculator
                 $batteryGrossRevenue = $hasRevenue ? $batteryAllocation['grossRevenue'] / 12.0 : 0.0;
                 $batteryInvestorRevenue = $hasRevenue ? $batteryAllocation['investorRevenue'] / 12.0 : 0.0;
                 $batteryInvestorCosts = $hasRevenue ? $batteryAllocation['investorCosts'] / 12.0 : 0.0;
+                $batteryRevenueBeforeDegradation = $hasRevenue ? $batteryAllocation['revenueBeforeDegradation'] / 12.0 : 0.0;
+                $batteryRevenueAfterDegradation = $hasRevenue ? $batteryAllocation['revenueAfterDegradation'] / 12.0 : 0.0;
+                $batteryCapexInvestor = $this->batteryCapexInvestorInMonth($scenario, $sourceTiming, $current, $batteryAllocation['investorCapex']);
+                $batteryReplacementCapexInvestor = $this->batteryReplacementCapexInvestorInMonth($scenario, $current);
                 $financingInterest = $hasInterest ? $scenario->financingAssumptions->annualInterest / 12.0 : 0.0;
                 $financingPrincipal = $hasRepayment ? $scenario->financingAssumptions->annualRepayment / 12.0 : 0.0;
                 $depreciation = $depreciationByMonth[$this->monthKey($year, $month)] ?? 0.0;
@@ -63,7 +68,9 @@ final class MonthlyScenarioCalculator
                     - $operatingCosts
                     - $financingInterest
                     - $financingPrincipal
-                    - $taxCashflow;
+                    - $taxCashflow
+                    - $batteryCapexInvestor
+                    - $batteryReplacementCapexInvestor;
                 $savingsContribution = $this->savingsContribution($scenario, $sourceTiming, $current, $savingsStart, $investorCashflowBeforeSavings);
                 $savingsReturn = 0.0;
                 $savingsTax = 0.0;
@@ -89,6 +96,11 @@ final class MonthlyScenarioCalculator
                     savingsTax: $savingsTax,
                     savingsEndValue: $savingsValue,
                     freeCashflowAfterSavings: $freeCashflowAfterSavings,
+                    batteryCapexInvestor: $batteryCapexInvestor,
+                    batteryReplacementCapexInvestor: $batteryReplacementCapexInvestor,
+                    batteryDegradationFactor: $batteryAllocation['degradationFactor'],
+                    batteryRevenueBeforeDegradation: $batteryRevenueBeforeDegradation,
+                    batteryRevenueAfterDegradation: $batteryRevenueAfterDegradation,
                 );
             }
         }
@@ -109,7 +121,7 @@ final class MonthlyScenarioCalculator
             $taxCalculation = $this->taxCalculator->calculate(
                 taxAssumptions: $taxAssumptions,
                 pvAssumptions: $scenario->pvAssumptions,
-                batteryModel: $scenario->batteryModel,
+                batteryModel: $this->batteryModelForYear($scenario, $sourceTiming, $year),
                 financingAssumptions: $scenario->financingAssumptions,
                 timingAssumptions: $timingAssumptions,
                 taxLossLedger: $taxLossLedger,
@@ -136,7 +148,7 @@ final class MonthlyScenarioCalculator
             $taxCalculation = $this->taxCalculator->calculate(
                 taxAssumptions: $taxAssumptions,
                 pvAssumptions: $scenario->pvAssumptions,
-                batteryModel: $scenario->batteryModel,
+                batteryModel: $this->batteryModelForYear($scenario, $sourceTiming, $year),
                 financingAssumptions: $scenario->financingAssumptions,
                 timingAssumptions: $timingAssumptions,
             );
@@ -177,6 +189,44 @@ final class MonthlyScenarioCalculator
 
         return $contribution
             + (max(0.0, $investorCashflowBeforeSavings) * $scenario->savingsPlanAssumptions->positiveCashflowReinvestmentRate);
+    }
+
+    private function batteryCapexInvestorInMonth(
+        ScenarioInput $scenario,
+        ProjectTimingAssumptions $sourceTiming,
+        YearMonth $current,
+        float $investorCapex,
+    ): float {
+        if($investorCapex === 0.0) {
+            return 0.0;
+        }
+
+        $paymentYear = $scenario->batteryModel->capexPaymentYear ?? $sourceTiming->investmentYear;
+        $paymentMonth = $scenario->batteryModel->capexPaymentMonth ?? $sourceTiming->investmentMonth;
+
+        return $current->year === $paymentYear && $current->month === $paymentMonth ? $investorCapex : 0.0;
+    }
+
+    private function batteryReplacementCapexInvestorInMonth(ScenarioInput $scenario, YearMonth $current): float
+    {
+        $batteryModel = $scenario->batteryModel;
+        if(!$batteryModel->batteryReplacementEnabled || $batteryModel->batteryReplacementCost === 0.0) {
+            return 0.0;
+        }
+        if($batteryModel->batteryReplacementYear === null) {
+            return 0.0;
+        }
+
+        return $current->year === $batteryModel->batteryReplacementYear && $current->month === $batteryModel->batteryReplacementMonth
+            ? $batteryModel->investorReplacementCost()
+            : 0.0;
+    }
+
+    private function batteryModelForYear(ScenarioInput $scenario, ProjectTimingAssumptions $sourceTiming, int $year): BatteryModel
+    {
+        $batteryAllocation = $scenario->batteryModel->annualAllocationForYear($year, $sourceTiming->revenueStartYear);
+
+        return $scenario->batteryModel->withAnnualRevenue($batteryAllocation['revenueAfterDegradation']);
     }
 
     private function activeMonthsInYear(int $calculationYear, int $startYear, int $startMonth): int

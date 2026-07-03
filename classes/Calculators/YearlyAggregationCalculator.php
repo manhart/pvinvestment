@@ -62,6 +62,11 @@ final class YearlyAggregationCalculator
             savingsTax: $this->sum($months, static fn(MonthResult $month): float => $month->savingsTax),
             savingsEndValue: $lastMonth->savingsEndValue,
             freeCashflowAfterSavings: $this->sum($months, static fn(MonthResult $month): float => $month->freeCashflowAfterSavings),
+            batteryCapexInvestor: $this->sum($months, static fn(MonthResult $month): float => $month->batteryCapexInvestor),
+            batteryReplacementCapexInvestor: $this->sum($months, static fn(MonthResult $month): float => $month->batteryReplacementCapexInvestor),
+            batteryDegradationFactor: $lastMonth->batteryDegradationFactor,
+            batteryRevenueBeforeDegradation: $this->sum($months, static fn(MonthResult $month): float => $month->batteryRevenueBeforeDegradation),
+            batteryRevenueAfterDegradation: $this->sum($months, static fn(MonthResult $month): float => $month->batteryRevenueAfterDegradation),
         );
     }
 

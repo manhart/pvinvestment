@@ -6,10 +6,10 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 
 | Feldgruppe | Felder | Einheit |
 | --- | --- | --- |
-| Geldwerte | `annualRevenue`, `annualOperatingCosts`, `annualInterest`, `annualRepayment`, `annualTaxPayment`, `acquisitionCost`, `capitalizableAncillaryCosts`, `immediatelyDeductibleCosts`, `iabAmount`, Ergebnis-Geldwerte | Euro als Dezimalzahl |
-| Prozent/Shares | `incomeTaxRate`, `taxRateByYear`, AfA-Saetze, `decliningBalanceRate`, Sonder-AfA-Verteilung, `investorRevenueShare`, `operatorRevenueShare`, `investorCostShare`, `operatorCostShare`, `investorCapexShare`, `operatorCapexShare`, `positiveCashflowReinvestmentRate` | Dezimalzahl zwischen 0 und 1 |
+| Geldwerte | `annualRevenue`, `annualOperatingCosts`, `annualInterest`, `annualRepayment`, `annualTaxPayment`, `acquisitionCost`, `capitalizableAncillaryCosts`, `immediatelyDeductibleCosts`, `iabAmount`, `batteryCapex`, `batteryReplacementCost`, Ergebnis-Geldwerte | Euro als Dezimalzahl |
+| Prozent/Shares | `incomeTaxRate`, `taxRateByYear`, AfA-Saetze, `decliningBalanceRate`, Sonder-AfA-Verteilung, `investorRevenueShare`, `operatorRevenueShare`, `investorCostShare`, `operatorCostShare`, `investorCapexShare`, `operatorCapexShare`, `investorReplacementCostShare`, `operatorReplacementCostShare`, `batteryDegradationRatePerYear`, `positiveCashflowReinvestmentRate` | Dezimalzahl zwischen 0 und 1 |
 | Jahre | `calculationYear`, IAB-Jahre, AfA-Jahre, Timing-Jahre, `taxPaymentYear` | Kalenderjahr als Integer |
-| Monate | Timing-Monate, `depreciationStartMonth`, `annualSavingsPlanContributionMonth`, `taxPaymentDelayMonths`, `taxCashflowMonth`, `usefulLifeMonths`, `depreciationMonths` | Kalendermonat 1 bis 12 bzw. Monatsanzahl als Integer |
+| Monate | Timing-Monate, `depreciationStartMonth`, `annualSavingsPlanContributionMonth`, `capexPaymentMonth`, `batteryReplacementMonth`, `taxPaymentDelayMonths`, `taxCashflowMonth`, `usefulLifeMonths`, `depreciationMonths` | Kalendermonat 1 bis 12 bzw. Monatsanzahl als Integer |
 | Monatsfaktoren | `revenueMonthFactor`, `interestMonthFactor`, `repaymentMonthFactor`, `savingsPlanContributionMonthFactor` | Dezimalfaktor zwischen 0 und 1 |
 | Monatszeilen | `MonthResult::year`, `MonthResult::month` | Kalenderjahr und Kalendermonat |
 
@@ -65,8 +65,12 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 - `net_revenue`: Market Access Fee und Optimizer Fee werden vor dem Revenue Share abgezogen. Batterie-Opex wird danach gemaess Cost-Shares verteilt.
 - `net_margin`: Market Access Fee, Optimizer Fee und Batterie-Opex werden vor dem Revenue Share abgezogen. Diese Kosten werden danach nicht nochmals als Investor- oder Betreiberkosten angesetzt.
 - Negative `net_margin` wird nicht auf 0 gekappt. Der negative Anteil laeuft proportional in Investor- und Betreibererloes.
-- Batterie-Capex wird separat als `investorBatteryCapex` und `operatorBatteryCapex` ausgewiesen. Der aktuelle Jahresprototyp zieht Batterie-Capex noch nicht automatisch vom laufenden Investor-Cashflow ab, weil der Zahlungszeitpunkt noch nicht monatlich modelliert ist.
-- Steuer und Cashflow verwenden dieselbe Batterie-Allokation aus `BatteryModel::annualAllocation()`.
+- Batterie-Capex wird separat als `investorBatteryCapex` und `operatorBatteryCapex` ausgewiesen. Die Monatsengine zieht den Investoranteil im Zahlungsmonat vom Investor-Cashflow ab.
+- Wenn `capexPaymentYear/month` nicht gesetzt ist, wird Batterie-Capex im Investitionsmonat aus `ProjectTimingAssumptions` gebucht.
+- Batterie-Degradation reduziert im Monatsengine-Pfad den Batterie-Bruttoerloes auf Jahresbasis. Das Ertragsstartjahr hat Faktor 1, Folgejahre verwenden `(1 - batteryDegradationRatePerYear) ^ jahre_seit_ertragsstartjahr`.
+- `batteryRevenueBeforeDegradation` und `batteryRevenueAfterDegradation` werden in `MonthResult` und `YearResult` ausgewiesen.
+- Batterie-Ersatzinvestitionen werden als `batteryReplacementCapexInvestor` im konfigurierten Ersatzmonat gebucht. Ohne eigenen `investorReplacementCostShare` gilt der Investor-Capex-Anteil aus dem Sharing-Modell.
+- Steuer und Cashflow verwenden im Monatsengine-Pfad dieselbe degradierte Batterie-Allokation fuer das jeweilige Jahr. Batterie-Capex und Ersatz-Capex sind nicht sofort steuerlich abzugsfaehig; steuerliche Wirkung entsteht nur ueber ein modelliertes `TaxAsset`.
 
 ## Timing-Vertrag
 

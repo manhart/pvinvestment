@@ -10,6 +10,7 @@ use pvinvestment\classes\Domain\BatteryModel;
 use pvinvestment\classes\Domain\FinancingAssumptions;
 use pvinvestment\classes\Domain\ProjectTimingAssumptions;
 use pvinvestment\classes\Domain\PvAssumptions;
+use pvinvestment\classes\Domain\RevenueSharingModel;
 use pvinvestment\classes\Domain\SavingsPlanAssumptions;
 use pvinvestment\classes\Domain\Scenario\ScenarioInput;
 use pvinvestment\classes\Domain\TaxAssumptions;
@@ -172,6 +173,128 @@ final class MonthlyScenarioCalculatorTest extends TestCase
         self::assertSame($this->sum($months, 'financingInterest'), $year->financingInterest);
         self::assertSame($this->sum($months, 'savingsContribution'), $year->savingsContribution);
         self::assertSame($months[11]->savingsEndValue, $year->savingsEndValue);
+    }
+
+    public function testBatteryCapexIsPaidInInvestmentMonth(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::fullOwnership(annualRevenue: 0.0, batteryCapex: 12000.0),
+            timingAssumptions: new ProjectTimingAssumptions(
+                calculationYear: 2026,
+                investmentYear: 2026,
+                investmentMonth: 8,
+            ),
+        ));
+
+        self::assertSame(0.0, $months[6]->batteryCapexInvestor);
+        self::assertSame(12000.0, $months[7]->batteryCapexInvestor);
+        self::assertSame(-12000.0, $months[7]->investorCashflowBeforeSavings);
+    }
+
+    public function testInvestorCarriesOneHundredPercentBatteryCapex(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::fullOwnership(annualRevenue: 0.0, batteryCapex: 10000.0),
+        ));
+
+        self::assertSame(10000.0, $months[0]->batteryCapexInvestor);
+        self::assertSame(-10000.0, $this->sum($months, 'investorCashflowBeforeSavings'));
+    }
+
+    public function testInvestorCarriesSixtyFivePercentBatteryCapex(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::profitSharing(
+                annualRevenue: 0.0,
+                annualOperatingCosts: 0.0,
+                sharingModel: RevenueSharingModel::profitSharing(
+                    investorRevenueShare: 0.65,
+                    operatorRevenueShare: 0.35,
+                    investorCapexShare: 0.65,
+                    operatorCapexShare: 0.35,
+                ),
+                batteryCapex: 10000.0,
+            ),
+        ));
+
+        self::assertSame(6500.0, $months[0]->batteryCapexInvestor);
+        self::assertSame(-6500.0, $this->sum($months, 'investorCashflowBeforeSavings'));
+    }
+
+    public function testOperatorCarriesOneHundredPercentBatteryCapex(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::profitSharing(
+                annualRevenue: 0.0,
+                annualOperatingCosts: 0.0,
+                sharingModel: RevenueSharingModel::profitSharing(
+                    investorRevenueShare: 0.65,
+                    operatorRevenueShare: 0.35,
+                    investorCapexShare: 0.0,
+                    operatorCapexShare: 1.0,
+                ),
+                batteryCapex: 10000.0,
+            ),
+        ));
+
+        self::assertSame(0.0, $months[0]->batteryCapexInvestor);
+        self::assertSame(0.0, $this->sum($months, 'investorCashflowBeforeSavings'));
+    }
+
+    public function testBatteryDegradationZeroPercentDoesNotChangeRevenue(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::fullOwnership(
+                annualRevenue: 12000.0,
+                batteryDegradationRatePerYear: 0.0,
+            ),
+            durationYears: 2,
+        ));
+        $years = (new YearlyAggregationCalculator())->aggregate($months);
+
+        self::assertSame(1.0, $years[0]->batteryDegradationFactor);
+        self::assertSame(1.0, $years[1]->batteryDegradationFactor);
+        self::assertSame(12000.0, $years[0]->batteryGrossRevenue);
+        self::assertSame(12000.0, $years[1]->batteryGrossRevenue);
+        self::assertSame(12000.0, $years[1]->batteryRevenueBeforeDegradation);
+        self::assertSame(12000.0, $years[1]->batteryRevenueAfterDegradation);
+    }
+
+    public function testBatteryDegradationTwoPercentReducesRevenueOverSeveralYears(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::fullOwnership(
+                annualRevenue: 12000.0,
+                batteryDegradationRatePerYear: 0.02,
+            ),
+            durationYears: 3,
+        ));
+        $years = (new YearlyAggregationCalculator())->aggregate($months);
+
+        self::assertSame(1.0, $years[0]->batteryDegradationFactor);
+        self::assertSame(0.98, $years[1]->batteryDegradationFactor);
+        self::assertEqualsWithDelta(0.9604, $years[2]->batteryDegradationFactor, 0.000001);
+        self::assertSame(12000.0, $years[0]->batteryGrossRevenue);
+        self::assertSame(11760.0, $years[1]->batteryGrossRevenue);
+        self::assertEqualsWithDelta(11524.8, $years[2]->batteryGrossRevenue, 0.000001);
+    }
+
+    public function testBatteryReplacementCreatesCapexCashflowInReplacementMonth(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            batteryModel: BatteryModel::fullOwnership(
+                annualRevenue: 0.0,
+                batteryReplacementEnabled: true,
+                batteryReplacementYear: 2027,
+                batteryReplacementMonth: 6,
+                batteryReplacementCost: 5000.0,
+            ),
+            durationYears: 2,
+        ));
+
+        self::assertSame(0.0, $months[16]->batteryReplacementCapexInvestor);
+        self::assertSame(5000.0, $months[17]->batteryReplacementCapexInvestor);
+        self::assertSame(-5000.0, $months[17]->investorCashflowBeforeSavings);
     }
 
     private function scenario(

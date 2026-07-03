@@ -44,7 +44,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 
 - Szenario: Name, Gruppe, Betrachtungszeitraum, Waehrung, Inflation, Diskontierungszins.
 - PV: Anlagenname, Standort, kWp, spezifischer Ertrag, Degradation, Investitionskosten als getrenntes PV-Wirtschaftsgut, Wartung, Versicherung, Pacht, Direktvermarktungskosten, EEG-Verguetung, Marktwert Solar, Strompreisannahme.
-- Batterie: `custom`, Degradation, Ersatzjahr, Ersatzkosten, zeitliche Capex-Zahlung, Batterie-Capex-Fortschreibung.
+- Batterie: `custom`, nutzbare Kapazitaet als eigene Zeitreihe, Batterie-Capex-Fortschreibung mit mehreren Ersatzereignissen.
 - Finanzierung: Darlehensbetrag, Auszahlung, Zinssatz, Tilgungssatz, Annuitaet, Zinsbindung, Laufzeit, Sondertilgung, tilgungsfreie Monate, Finanzierungsnebenkosten.
 - Steuer: Ruhestandssaetze als eigene Phase, IAB-Prozentsatz statt Betrag, steuerliche Rueckgaengigmachung des IAB, manueller Wechsel von degressiv zu linear mit Wechseljahr, asset-spezifische Zinsabzugs-Konfiguration, detaillierte gesetzliche Grenzen fuer Verlustvortrag/-ruecktrag.
 - Sparplan: erwartete Rendite, Kostenquote, Kapitalertragsteuer, Teilfreistellung, Sparer-Pauschbetrag, Entnahmephase.
@@ -61,7 +61,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Profit-Sharing wird steuerlich und cashflowseitig aus derselben Investor-Perspektive berechnet. Die Investor-Erloese und Investor-Kosten aus `BatteryModel::annualAllocation()` gehen in beide Rechenwege ein.
 - Profit-Sharing unterstuetzt explizit `gross_revenue`, `net_revenue` und `net_margin`. Bei `net_margin` werden Market Access Fee, Optimizer Fee und Batterie-Opex nicht nochmals als Kosten abgezogen.
 - Negative Nettomargen werden proportional verteilt und nicht automatisch auf 0 gekappt.
-- Batterie-Capex wird nach Capex-Shares als Investor-/Betreiberanteil ausgewiesen, aber im Jahresprototyp noch nicht automatisch als laufender Cashflow abgezogen.
+- Batterie-Capex wird nach Capex-Shares als Investor-/Betreiberanteil ausgewiesen und im Monatsengine-Pfad im Zahlungsmonat als Investor-Cashflow abgezogen. Ersatzinvestitionen werden separat als `batteryReplacementCapexInvestor` gebucht. Steuerlich werden sie nicht automatisch als Sofortaufwand behandelt; ein eigenes `TaxAsset` ist dafuer explizit anzulegen.
 - Sparplan-Startkapital ist frei setzbar. Rendite, Steuern und Kosten des Sparplans fehlen noch.
 - Steuerzahlungsjahr und Steuerentstehungsjahr sind getrennt: `taxAmount` entsteht im Rechenjahr, die Monatsengine bucht den `taxCashflow` im berechneten Zahlungsmonat. Der Legacy-Jahresrechner weist `cashflowTaxPayment` nur aus, wenn `taxPaymentYear === calculationYear`.
 - Steuerliche Verlustnutzung ist parametrisierbar ueber `immediate`, `carry_forward`, `carry_back`, `manual` und `none`. `TaxLossLedger` haelt Verlustvortraege und Vorjahresgewinn-Kapazitaeten fuer mehrjaehrige Rechnungen.

@@ -46,3 +46,5 @@ Begruendung: `profit_sharing_sharing_base_explizit`, `konsistente_zinsbehandlung
 Die Domain-Werte sind reproduzierbare Erwartungswerte fuer den aktuellen Domain-Prototyp. Sie enthalten keine echten Angebots-, Projekt- oder Investorendaten.
 
 Seit Aufgabe 14 werden diese Werte ueber den `ScenarioCalculator` aus Monatswerten berechnet und dann ueber `YearlyAggregationCalculator` zu Jahres- und Scenario-Kennzahlen verdichtet. Die anonymisierten Erwartungswerte mussten bei der Umstellung nicht angepasst werden.
+
+Seit Aufgabe 15 unterstuetzt die Monatsengine Batterie-Capex, Batterie-Degradation und Batterie-Ersatzinvestitionen. Die oeffentlichen Referenzszenarien enthalten dafuer keine nicht-null Werte; deshalb mussten die Domain-Referenzwerte nicht angepasst werden.

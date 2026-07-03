@@ -284,6 +284,82 @@ final class ScenarioCalculatorTest extends TestCase
         self::assertSame(1500.0, $tax20['differenceToBase']['totalInvestorResult']);
     }
 
+    public function testBatteryReplacementInfluencesScenarioComparison(): void
+    {
+        $comparison = $this->calculator()->compare([
+            $this->scenario(
+                id: 'without_replacement',
+                pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+                batteryModel: BatteryModel::fullOwnership(annualRevenue: 12000.0),
+                durationYears: 2,
+            ),
+            $this->scenario(
+                id: 'with_replacement',
+                pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+                batteryModel: BatteryModel::fullOwnership(
+                    annualRevenue: 12000.0,
+                    batteryReplacementEnabled: true,
+                    batteryReplacementYear: 2027,
+                    batteryReplacementMonth: 6,
+                    batteryReplacementCost: 5000.0,
+                ),
+                durationYears: 2,
+            ),
+        ]);
+
+        $withReplacement = $comparison->rowFor('with_replacement');
+
+        self::assertSame(19000.0, $withReplacement['cumulativeInvestorCashflow']);
+        self::assertSame(-5000.0, $withReplacement['differenceToBase']['cumulativeInvestorCashflow']);
+        self::assertSame(-5000.0, $withReplacement['differenceToBase']['totalInvestorResult']);
+    }
+
+    public function testProfitSharingSixtyFiveThirtyFiveWithInvestorCarryingAllCapex(): void
+    {
+        $result = $this->calculator()->calculate($this->scenario(
+            id: 'share_capex_100',
+            pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+            batteryModel: BatteryModel::profitSharing(
+                annualRevenue: 12000.0,
+                annualOperatingCosts: 0.0,
+                sharingModel: RevenueSharingModel::profitSharing(
+                    investorRevenueShare: 0.65,
+                    operatorRevenueShare: 0.35,
+                    investorCapexShare: 1.0,
+                    operatorCapexShare: 0.0,
+                ),
+                batteryCapex: 10000.0,
+            ),
+        ));
+
+        self::assertSame(10000.0, $result->yearlyResults[0]->batteryCapexInvestor);
+        self::assertSame(7800.0, $result->cumulativeInvestorBatteryRevenue);
+        self::assertSame(-2200.0, $result->cumulativeInvestorCashflow);
+    }
+
+    public function testProfitSharingSixtyFiveThirtyFiveWithInvestorCarryingSixtyFivePercentCapex(): void
+    {
+        $result = $this->calculator()->calculate($this->scenario(
+            id: 'share_capex_65',
+            pvAssumptions: new PvAssumptions(annualRevenue: 0.0),
+            batteryModel: BatteryModel::profitSharing(
+                annualRevenue: 12000.0,
+                annualOperatingCosts: 0.0,
+                sharingModel: RevenueSharingModel::profitSharing(
+                    investorRevenueShare: 0.65,
+                    operatorRevenueShare: 0.35,
+                    investorCapexShare: 0.65,
+                    operatorCapexShare: 0.35,
+                ),
+                batteryCapex: 10000.0,
+            ),
+        ));
+
+        self::assertSame(6500.0, $result->yearlyResults[0]->batteryCapexInvestor);
+        self::assertSame(7800.0, $result->cumulativeInvestorBatteryRevenue);
+        self::assertSame(1300.0, $result->cumulativeInvestorCashflow);
+    }
+
     private function scenario(
         string $id,
         ?PvAssumptions $pvAssumptions = null,

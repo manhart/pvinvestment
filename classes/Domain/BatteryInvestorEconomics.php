@@ -19,6 +19,9 @@ final class BatteryInvestorEconomics
         public readonly float $investorCapex,
         public readonly float $operatorCapex,
         public readonly string $sharingBase,
+        public readonly float $degradationFactor = 1.0,
+        public readonly float $revenueBeforeDegradation = 0.0,
+        public readonly float $revenueAfterDegradation = 0.0,
     ) {}
 
     /**
@@ -35,7 +38,10 @@ final class BatteryInvestorEconomics
      *     operatorCosts: float,
      *     investorCapex: float,
      *     operatorCapex: float,
-     *     sharingBase: string
+     *     sharingBase: string,
+     *     degradationFactor: float,
+     *     revenueBeforeDegradation: float,
+     *     revenueAfterDegradation: float
      * }
      */
     public function toAllocationArray(): array
@@ -54,6 +60,9 @@ final class BatteryInvestorEconomics
             'investorCapex' => $this->investorCapex,
             'operatorCapex' => $this->operatorCapex,
             'sharingBase' => $this->sharingBase,
+            'degradationFactor' => $this->degradationFactor,
+            'revenueBeforeDegradation' => $this->revenueBeforeDegradation,
+            'revenueAfterDegradation' => $this->revenueAfterDegradation,
         ];
     }
 }

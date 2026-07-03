@@ -67,7 +67,39 @@ Batterie-Capex bleibt separat von der laufenden Erloes- und Kostenverteilung:
 - `investor_battery_capex = battery_capex * investor_capex_share`
 - `operator_battery_capex = battery_capex * operator_capex_share`
 
-Der aktuelle Jahresprototyp weist Batterie-Capex transparent aus, verbucht ihn aber noch nicht automatisch als Investitions-Cashflow. Der Zeitpunkt der Capex-Zahlung wird in der spaeteren Monatsrechnung festgelegt.
+In der Monatsengine wird `investor_battery_capex` im Zahlungsmonat als Investor-Cashflow abgezogen. Wenn `capexPaymentYear/month` nicht gesetzt ist, wird der Investitionsmonat aus `ProjectTimingAssumptions::investmentYear/month` verwendet. Capex wird nicht mit Opex oder Revenue Share vermischt und ist steuerlich nicht sofort abzugsfaehig.
+
+Ergebnisfelder:
+
+- `batteryCapexInvestor`
+- `batteryReplacementCapexInvestor`
+
+## Degradation
+
+Fuer den Prototyp reduziert Batterie-Degradation den jaehrlichen Batterie-Bruttoerloes. Die nutzbare Kapazitaet wird noch nicht separat modelliert.
+
+Regel:
+
+- Jahr des Ertragsbeginns: `battery_degradation_factor = 1.0`
+- Folgejahre: `battery_degradation_factor = (1 - battery_degradation_rate_per_year) ^ jahre_seit_ertragsstartjahr`
+- `battery_revenue_before_degradation = battery_gross_revenue_basis`
+- `battery_revenue_after_degradation = battery_revenue_before_degradation * battery_degradation_factor`
+
+Bei `battery_degradation_rate_per_year = 0` bleibt der Faktor dauerhaft `1.0`; es gibt keine stillschweigende Degradation.
+
+## Ersatzinvestition
+
+Ersatzinvestitionen werden als separate Capex-Cashflows modelliert:
+
+- `battery_replacement_enabled`
+- `battery_replacement_year`
+- `battery_replacement_month`
+- `battery_replacement_cost`
+- `investor_replacement_cost_share`
+
+Wenn kein eigener Investoranteil fuer Ersatzkosten gesetzt ist, wird der Capex-Anteil aus dem Revenue-Sharing-Modell verwendet. Die Ersatzinvestition wird nicht als laufende Opex behandelt und nicht in die Sharing-Basis eingerechnet.
+
+Steuerlich ist eine Ersatzinvestition als eigenes `TaxAsset` im `TaxAssetLedger` modellierbar. Der Scenario-Prototyp legt dieses TaxAsset noch nicht automatisch an, damit keine implizite steuerliche Annahme entsteht.
 
 ## Modell: Individueller Split
 
@@ -88,9 +120,14 @@ Der aktuelle Jahresprototyp weist Batterie-Capex transparent aus, verbucht ihn a
 - `sharing_base`
 - `battery_capex`
 - `battery_opex`
-- `battery_degradation_rate`
+- `capex_payment_year`
+- `capex_payment_month`
+- `battery_degradation_rate_per_year`
+- `battery_replacement_enabled`
 - `battery_replacement_year`
+- `battery_replacement_month`
 - `battery_replacement_cost`
+- `investor_replacement_cost_share`
 - `optimizer_fee`
 - `market_access_fee`
 
@@ -105,5 +142,10 @@ Die spaetere Berechnung soll mindestens ausweisen:
 - Betreiberanteil Erloese
 - Investoranteil Kosten
 - Betreiberanteil Kosten
+- Batterie-Capex Investor
+- Batterie-Ersatz-Capex Investor
+- Degradationsfaktor
+- Batterieerloes vor Degradation
+- Batterieerloes nach Degradation
 - Ersatzinvestitionen
 - steuerlich relevante Batteriewerte

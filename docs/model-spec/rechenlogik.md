@@ -28,6 +28,9 @@ Aktuelle Regeln:
 
 - PV- und Batterieerloese fallen erst ab `revenueStartYear/month` an.
 - Laufende PV-Kosten und Batterie-Investor-Kosten fallen im Prototyp ebenfalls ab Ertragsbeginn an.
+- Batterie-Capex wird im konfigurierten `capexPaymentYear/month` gebucht; ohne eigene Angabe gilt der Investitionsmonat.
+- Batterie-Ersatzinvestitionen werden als separater Investor-Capex im konfigurierten Ersatzmonat gebucht.
+- Batterie-Degradation reduziert im Prototyp den Batterie-Bruttoerloes je Kalenderjahr. Das Ertragsstartjahr hat Faktor 1, Folgejahre verwenden `(1 - batteryDegradationRatePerYear) ^ jahre_seit_ertragsstartjahr`.
 - Zinsen fallen ab `interestStartYear/month` an.
 - Tilgung faellt ab `repaymentStartYear/month` an.
 - AfA wird ab `depreciationStartYear/month` monatlich aus der Jahres-AfA verteilt.
@@ -37,7 +40,7 @@ Aktuelle Regeln:
 - Reinvestition aus positivem freiem Cashflow wird monatlich auf Basis des positiven Monats-Cashflows berechnet.
 - Steuerzahlungen und Steuererstattungen werden dem Steuerzahlungsjahr zugeordnet. Weil `ProjectTimingAssumptions` aktuell nur ein Steuerzahlungsjahr und keinen Steuerzahlungsmonat enthaelt, bucht die Monatsengine sie vorerst im Dezember des Zahlungsjahres.
 
-Investitionsdatum, EEG-Inbetriebnahme und Netzanschluss werden in der Monatsengine als getrennte Zeitpunkte mitgefuehrt. Der aktuelle Cashflow-Prototyp bucht noch keinen Capex-Zahlungsstrom und verwendet EEG-/Netzanschluss nicht als automatische Sperre fuer den Ertragsbeginn.
+Investitionsdatum, EEG-Inbetriebnahme und Netzanschluss werden in der Monatsengine als getrennte Zeitpunkte mitgefuehrt. Batterie-Capex verwendet den Investitionsmonat als Default-Zahlungsmonat. Der aktuelle Cashflow-Prototyp bucht noch keinen PV-Capex-Zahlungsstrom und verwendet EEG-/Netzanschluss nicht als automatische Sperre fuer den Ertragsbeginn.
 
 Der alte `AnnualInvestorCashflowCalculator` bleibt als separat testbarer Legacy-/Kompatibilitaetspfad bestehen. Er erzeugt keine `ScenarioComparison`-Kennzahlen mehr.
 
