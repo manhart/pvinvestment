@@ -1,0 +1,25 @@
+{
+  "id": "battery_profit_sharing_65_35",
+  "title": "Batterie Profit-Sharing 65/35",
+  "source": {
+    "file": "docs/reference-excel/reference-case-b.xlsx",
+    "sheet": "Annahmen",
+    "scenario": "Anonymisiertes Beispiel"
+  },
+  "note": "Oeffentliche, anonymisierte Domain-Referenzannahme fuer Profit-Sharing. Keine echten Angebots- oder Investorendaten.",
+  "inputs": {
+    "batteryModel": {"value": "profit_sharing"},
+    "sharingBase": {"value": "gross_revenue"},
+    "investorBatteryRevenueShare": {"value": 0.65, "unit": "decimal"},
+    "operatorBatteryRevenueShare": {"value": 0.35, "unit": "decimal"},
+    "investorBatteryCostShare": {"value": 1.0, "unit": "decimal"},
+    "operatorBatteryCostShare": {"value": 0.0, "unit": "decimal"},
+    "batteryAnnualRevenue": {"value": 12000.0, "unit": "EUR/year"},
+    "batteryAnnualOperatingCosts": {"value": 1000.0, "unit": "EUR/year"},
+    "financingAnnualInterest": {"value": 1000.0, "unit": "EUR/year"},
+    "financingAnnualRepayment": {"value": 2000.0, "unit": "EUR/year"}
+  },
+  "excelReferenceValues": {
+    "cashflowAfterDebtAndTax": {"value": 30000.0, "unit": "EUR", "source": "anonymisierte Vergleichsannahme"}
+  }
+}

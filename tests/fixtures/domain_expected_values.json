@@ -1,0 +1,204 @@
+{
+  "metadata": {
+    "createdAt": "2026-07-02",
+    "note": "Anonymisierte Domain-Erwartungswerte fuer das oeffentliche Repository.",
+    "currency": "EUR",
+    "tolerance": 0.01
+  },
+  "scenarios": {
+    "pv_battery_mid_case": {
+      "title": "PV-Batterie Mid Case",
+      "sourceScenarioFixture": "tests/fixtures/scenarios/pv_battery_mid_case.json",
+      "durationYears": 5,
+      "inputs": {
+        "pvAnnualRevenue": 24000.0,
+        "pvAnnualOperatingCosts": 1200.0,
+        "batteryModel": "full_ownership",
+        "batteryAnnualRevenue": 6000.0,
+        "batteryAnnualOperatingCosts": 600.0,
+        "financingAnnualInterest": 4000.0,
+        "financingAnnualRepayment": 6000.0,
+        "tax": {
+          "calculationYear": 2026,
+          "incomeTaxRate": 0.35,
+          "acquisitionCost": 200000.0,
+          "capitalizableAncillaryCosts": 8000.0,
+          "immediatelyDeductibleCosts": 0.0,
+          "depreciationStartYear": 2026,
+          "depreciationStartMonth": 9,
+          "linearDepreciationRate": 0.05,
+          "lossHandlingStrategy": "immediate"
+        },
+        "timing": {
+          "calculationYear": 2026,
+          "investmentYear": 2026,
+          "investmentMonth": 8,
+          "depreciationStartYear": 2026,
+          "depreciationStartMonth": 9,
+          "eegCommissioningYear": 2026,
+          "eegCommissioningMonth": 9,
+          "gridConnectionYear": 2026,
+          "gridConnectionMonth": 11,
+          "revenueStartYear": 2026,
+          "revenueStartMonth": 11,
+          "interestStartYear": 2026,
+          "interestStartMonth": 8,
+          "repaymentStartYear": 2026,
+          "repaymentStartMonth": 10
+        },
+        "savingsStartingCapital": 0.0
+      },
+      "excelReferenceValues": {
+        "cashflowAfterDebtAndTax": 64000.0
+      },
+      "domainExpectedValues": {
+        "cumulativeInvestorCashflow": 55165.0,
+        "cumulativeTaxCashflow": 19168.33,
+        "cumulativeInvestorBatteryRevenue": 25000.0,
+        "savingsPlanEndingCapital": 0.0,
+        "totalInvestorResult": 55165.0,
+        "breakEvenYear": 2026
+      },
+      "deviations": [
+        {
+          "metric": "cashflowAfterDebtAndTax_vs_totalInvestorResult",
+          "excelValue": 64000.0,
+          "domainValue": 55165.0,
+          "absoluteDeviation": -8835.0,
+          "percentageDeviation": -13.8047,
+          "reasonCodes": [
+            "keine_doppelte_kaufnebenkostenverwertung",
+            "konsistente_zinsbehandlung",
+            "separater_afa_beginn_und_ertragsbeginn",
+            "steuererstattungs_timing_parametrisierbar",
+            "sparplan_startkapital_frei_eingebbar"
+          ]
+        }
+      ]
+    },
+    "battery_full_ownership": {
+      "title": "Batterie Vollerwerb",
+      "sourceScenarioFixture": "tests/fixtures/scenarios/battery_full_ownership.json",
+      "durationYears": 5,
+      "inputs": {
+        "pvAnnualRevenue": 0.0,
+        "pvAnnualOperatingCosts": 0.0,
+        "batteryModel": "full_ownership",
+        "batteryAnnualRevenue": 12000.0,
+        "batteryAnnualOperatingCosts": 1000.0,
+        "financingAnnualInterest": 0.0,
+        "financingAnnualRepayment": 0.0,
+        "tax": {
+          "calculationYear": 2026,
+          "incomeTaxRate": 0.30,
+          "lossHandlingStrategy": "immediate"
+        },
+        "timing": {
+          "calculationYear": 2026,
+          "revenueStartYear": 2026,
+          "revenueStartMonth": 1
+        },
+        "savingsStartingCapital": 0.0
+      },
+      "excelReferenceValues": {
+        "cashflowAfterDebtAndTax": 42000.0
+      },
+      "domainExpectedValues": {
+        "cumulativeInvestorCashflow": 38500.0,
+        "cumulativeTaxCashflow": 16500.0,
+        "cumulativeInvestorBatteryRevenue": 60000.0,
+        "savingsPlanEndingCapital": 0.0,
+        "totalInvestorResult": 38500.0,
+        "breakEvenYear": 2026
+      },
+      "deviations": [
+        {
+          "metric": "cashflowAfterDebtAndTax_vs_totalInvestorResult",
+          "excelValue": 42000.0,
+          "domainValue": 38500.0,
+          "absoluteDeviation": -3500.0,
+          "percentageDeviation": -8.3333,
+          "reasonCodes": [
+            "profit_sharing_sharing_base_explizit",
+            "konsistente_zinsbehandlung",
+            "steuererstattungs_timing_parametrisierbar"
+          ]
+        }
+      ]
+    },
+    "battery_profit_sharing_65_35": {
+      "title": "Batterie Profit-Sharing 65/35",
+      "sourceScenarioFixture": "tests/fixtures/scenarios/battery_profit_sharing_65_35.json",
+      "durationYears": 5,
+      "inputs": {
+        "pvAnnualRevenue": 0.0,
+        "pvAnnualOperatingCosts": 0.0,
+        "batteryModel": "profit_sharing",
+        "batteryAnnualRevenue": 12000.0,
+        "batteryAnnualOperatingCosts": 1000.0,
+        "investorBatteryRevenueShare": 0.65,
+        "operatorBatteryRevenueShare": 0.35,
+        "investorBatteryCostShare": 1.0,
+        "operatorBatteryCostShare": 0.0,
+        "sharingBase": "gross_revenue",
+        "financingAnnualInterest": 1000.0,
+        "financingAnnualRepayment": 2000.0,
+        "tax": {
+          "calculationYear": 2026,
+          "incomeTaxRate": 0.35,
+          "acquisitionCost": 100000.0,
+          "capitalizableAncillaryCosts": 4000.0,
+          "immediatelyDeductibleCosts": 0.0,
+          "depreciationStartYear": 2026,
+          "depreciationStartMonth": 11,
+          "linearDepreciationRate": 0.05,
+          "lossHandlingStrategy": "immediate"
+        },
+        "timing": {
+          "calculationYear": 2026,
+          "investmentYear": 2026,
+          "investmentMonth": 10,
+          "depreciationStartYear": 2026,
+          "depreciationStartMonth": 11,
+          "eegCommissioningYear": 2026,
+          "eegCommissioningMonth": 11,
+          "gridConnectionYear": 2027,
+          "gridConnectionMonth": 2,
+          "revenueStartYear": 2027,
+          "revenueStartMonth": 2,
+          "interestStartYear": 2026,
+          "interestStartMonth": 10,
+          "repaymentStartYear": 2026,
+          "repaymentStartMonth": 12
+        },
+        "savingsStartingCapital": 0.0
+      },
+      "excelReferenceValues": {
+        "cashflowAfterDebtAndTax": 30000.0
+      },
+      "domainExpectedValues": {
+        "cumulativeInvestorCashflow": 13965.83,
+        "cumulativeTaxCashflow": 250.84,
+        "cumulativeInvestorBatteryRevenue": 30550.0,
+        "savingsPlanEndingCapital": 0.0,
+        "totalInvestorResult": 13965.83,
+        "breakEvenYear": 2027
+      },
+      "deviations": [
+        {
+          "metric": "cashflowAfterDebtAndTax_vs_totalInvestorResult",
+          "excelValue": 30000.0,
+          "domainValue": 13965.83,
+          "absoluteDeviation": -16034.17,
+          "percentageDeviation": -53.4472,
+          "reasonCodes": [
+            "profit_sharing_sharing_base_explizit",
+            "konsistente_zinsbehandlung",
+            "separater_afa_beginn_und_ertragsbeginn",
+            "steuererstattungs_timing_parametrisierbar"
+          ]
+        }
+      ]
+    }
+  }
+}

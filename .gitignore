@@ -1,0 +1,52 @@
+# Dependencies
+/vendor/
+/composer.lock
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs / cache
+*.log
+/cache/
+/tmp/
+/var/cache/
+/var/log/
+
+# PHPUnit
+.phpunit.result.cache
+
+# Excel source files: do not publish proprietary offer material by default
+docs/reference-excel/*.xlsx
+docs/reference-excel/*.xlsm
+docs/reference-excel/*.xls
+docs/reference-excel/*.csv
+docs/reference-excel/*.pdf
+
+# Local generated extraction dumps if they contain proprietary data
+docs/model-spec/excel-inventory.local.md
+docs/model-spec/excel-inputs.local.md
+docs/model-spec/excel-results.local.md
+docs/model-spec/excel-abweichungen.local.md
+docs/model-spec/domain-referenzwerte.local.md
+tests/fixtures/*.local.json
+tests/fixtures/scenarios/*.local.json
+*.local.md
+*.local.json
+
+# Database dumps
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.dump.gz
+*.sql.gz
+*.bak

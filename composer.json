@@ -1,0 +1,14 @@
+{
+    "name": "manhart/pvinvestment",
+    "description": "PV-Investitionsrechner POOL application tooling dependencies.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {},
+    "require-dev": {
+        "phpoffice/phpspreadsheet": "^5.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
+

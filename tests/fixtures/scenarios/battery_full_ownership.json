@@ -1,0 +1,23 @@
+{
+  "id": "battery_full_ownership",
+  "title": "Batterie Vollerwerb",
+  "source": {
+    "file": "docs/reference-excel/reference-case-a.xlsx",
+    "sheet": "Annahmen",
+    "scenario": "Anonymisiertes Beispiel"
+  },
+  "note": "Oeffentliche, anonymisierte Domain-Referenzannahme fuer 100 Prozent Batterie-Vollerwerb.",
+  "inputs": {
+    "batteryModel": {"value": "full_ownership"},
+    "sharingBase": {"value": "gross_revenue"},
+    "investorBatteryRevenueShare": {"value": 1.0, "unit": "decimal"},
+    "operatorBatteryRevenueShare": {"value": 0.0, "unit": "decimal"},
+    "investorBatteryCostShare": {"value": 1.0, "unit": "decimal"},
+    "operatorBatteryCostShare": {"value": 0.0, "unit": "decimal"},
+    "batteryAnnualRevenue": {"value": 12000.0, "unit": "EUR/year"},
+    "batteryAnnualOperatingCosts": {"value": 1000.0, "unit": "EUR/year"}
+  },
+  "excelReferenceValues": {
+    "cashflowAfterDebtAndTax": {"value": 42000.0, "unit": "EUR", "source": "anonymisierte Vergleichsannahme"}
+  }
+}

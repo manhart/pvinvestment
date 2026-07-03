@@ -1,0 +1,28 @@
+{
+  "id": "pv_battery_mid_case",
+  "title": "PV-Batterie Mid Case",
+  "source": {
+    "file": "docs/reference-excel/reference-case-a.xlsx",
+    "sheet": "Annahmen",
+    "scenario": "Anonymisiertes Beispiel"
+  },
+  "note": "Oeffentliche, anonymisierte Domain-Referenzannahme. Keine echten Angebots- oder Investorendaten.",
+  "inputs": {
+    "batteryModel": {"value": "full_ownership"},
+    "sharingBase": {"value": "gross_revenue"},
+    "pvAnnualRevenue": {"value": 24000.0, "unit": "EUR/year"},
+    "pvAnnualOperatingCosts": {"value": 1200.0, "unit": "EUR/year"},
+    "batteryAnnualRevenue": {"value": 6000.0, "unit": "EUR/year"},
+    "batteryAnnualOperatingCosts": {"value": 600.0, "unit": "EUR/year"},
+    "financingAnnualInterest": {"value": 4000.0, "unit": "EUR/year"},
+    "financingAnnualRepayment": {"value": 6000.0, "unit": "EUR/year"},
+    "incomeTaxRate": {"value": 0.35, "unit": "decimal"},
+    "acquisitionCost": {"value": 200000.0, "unit": "EUR"},
+    "capitalizableAncillaryCosts": {"value": 8000.0, "unit": "EUR"},
+    "depreciationStart": {"value": "2026-09"},
+    "revenueStart": {"value": "2026-11"}
+  },
+  "excelReferenceValues": {
+    "cashflowAfterDebtAndTax": {"value": 64000.0, "unit": "EUR", "source": "anonymisierte Vergleichsannahme"}
+  }
+}

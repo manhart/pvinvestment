@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "generatedAt": "2026-07-02",
+    "note": "Anonymisierte Beispielwerte fuer das oeffentliche Repository. Proprietaere Original-Excel-Auswertungen liegen nur lokal als *.local.json/*.local.md vor."
+  },
+  "files": [
+    {
+      "file": "docs/reference-excel/reference-case-a.xlsx",
+      "sheets": [
+        {
+          "name": "Annahmen",
+          "state": "visible",
+          "inputs": [],
+          "annualResults": [],
+          "formulas": []
+        }
+      ]
+    }
+  ]
+}
