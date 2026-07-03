@@ -7,14 +7,73 @@ use PHPUnit\Framework\TestCase;
 use pvinvestment\classes\Calculators\ScenarioCalculator;
 use pvinvestment\classes\Domain\BatteryModel;
 use pvinvestment\classes\Domain\FinancingAssumptions;
+use pvinvestment\classes\Domain\ProjectTimingAssumptions;
 use pvinvestment\classes\Domain\PvAssumptions;
 use pvinvestment\classes\Domain\RevenueSharingModel;
+use pvinvestment\classes\Domain\Results\YearResult;
 use pvinvestment\classes\Domain\SavingsPlanAssumptions;
 use pvinvestment\classes\Domain\Scenario\ScenarioInput;
 use pvinvestment\classes\Domain\TaxAssumptions;
 
 final class ScenarioCalculatorTest extends TestCase
 {
+    public function testScenarioCalculatorUsesMonthlyEngineAsPrimaryPath(): void
+    {
+        $result = $this->calculator()->calculate($this->scenario(
+            id: 'monthly_primary',
+            pvAssumptions: new PvAssumptions(annualRevenue: 12000.0),
+            timingAssumptions: new ProjectTimingAssumptions(
+                calculationYear: 2026,
+                revenueStartYear: 2026,
+                revenueStartMonth: 11,
+            ),
+        ));
+
+        self::assertCount(12, $result->monthlyResults);
+        self::assertSame(0.0, $result->monthlyResults[9]->pvRevenue);
+        self::assertSame(1000.0, $result->monthlyResults[10]->pvRevenue);
+        self::assertSame(2000.0, $result->yearlyResults[0]->pvRevenue);
+        self::assertSame(2000.0, $result->cumulativeInvestorCashflow);
+    }
+
+    public function testScenarioResultYearlyAggregationEqualsMonthlySums(): void
+    {
+        $result = $this->calculator()->calculate($this->scenario(
+            id: 'aggregation',
+            pvAssumptions: new PvAssumptions(annualRevenue: 12000.0, annualOperatingCosts: 1200.0),
+            batteryModel: BatteryModel::fullOwnership(annualRevenue: 2400.0, annualOperatingCosts: 120.0),
+            financingAssumptions: new FinancingAssumptions(annualInterest: 1200.0, annualRepayment: 2400.0),
+            savingsPlanAssumptions: new SavingsPlanAssumptions(monthlyContribution: 100.0),
+        ));
+        $year = $result->yearlyResults[0];
+
+        self::assertInstanceOf(YearResult::class, $result->annualResults[0]);
+        self::assertSame($this->sum($result->monthlyResults, 'pvRevenue'), $year->pvRevenue);
+        self::assertSame($this->sum($result->monthlyResults, 'batteryInvestorRevenue'), $year->batteryInvestorRevenue);
+        self::assertSame($this->sum($result->monthlyResults, 'taxCashflow'), $year->taxCashflow);
+        self::assertSame($this->sum($result->monthlyResults, 'investorCashflowBeforeSavings'), $result->cumulativeInvestorCashflow);
+        self::assertSame($result->monthlyResults[11]->savingsEndValue, $result->savingsPlanEndingCapital);
+    }
+
+    public function testBreakEvenYearIsDeterminedFromAggregatedMonthlyYears(): void
+    {
+        $result = $this->calculator()->calculate($this->scenario(
+            id: 'break_even',
+            pvAssumptions: new PvAssumptions(annualRevenue: 12000.0),
+            financingAssumptions: new FinancingAssumptions(annualRepayment: 6000.0),
+            durationYears: 3,
+            timingAssumptions: new ProjectTimingAssumptions(
+                calculationYear: 2026,
+                revenueStartYear: 2026,
+                revenueStartMonth: 8,
+            ),
+        ));
+
+        self::assertSame(-1000.0, $result->yearlyResults[0]->investorCashflowBeforeSavings);
+        self::assertSame(12000.0, $result->yearlyResults[1]->pvRevenue);
+        self::assertSame(2027, $result->breakEvenYear);
+    }
+
     public function testFullOwnershipComparedToProfitSharingSixtyFiveThirtyFive(): void
     {
         $comparison = $this->calculator()->compare([
@@ -234,6 +293,7 @@ final class ScenarioCalculatorTest extends TestCase
         ?TaxAssumptions $taxAssumptions = null,
         ?SavingsPlanAssumptions $savingsPlanAssumptions = null,
         int $durationYears = 1,
+        ?ProjectTimingAssumptions $timingAssumptions = null,
     ): ScenarioInput {
         $batteryModel ??= BatteryModel::none();
         $revenueSharingModel ??= $batteryModel->sharingModel;
@@ -248,6 +308,7 @@ final class ScenarioCalculatorTest extends TestCase
             taxAssumptions: $taxAssumptions ?? new TaxAssumptions(calculationYear: 2026),
             savingsPlanAssumptions: $savingsPlanAssumptions ?? new SavingsPlanAssumptions(),
             durationYears: $durationYears,
+            timingAssumptions: $timingAssumptions,
         );
     }
 
@@ -269,5 +330,15 @@ final class ScenarioCalculatorTest extends TestCase
     private function calculator(): ScenarioCalculator
     {
         return new ScenarioCalculator();
+    }
+
+    private function sum(array $results, string $property): float
+    {
+        $sum = 0.0;
+        foreach($results as $result) {
+            $sum += $result->{$property};
+        }
+
+        return $sum;
     }
 }

@@ -22,7 +22,7 @@ Der Domain-Prototyp fuehrt diese Zeitpunkte in `ProjectTimingAssumptions` getren
 
 ## Implementierte Monatsengine
 
-`MonthlyScenarioCalculator` erzeugt eine Ergebniszeile je Kalendermonat. `YearlyAggregationCalculator` aggregiert Jahreswerte ausschliesslich aus diesen Monatszeilen.
+`MonthlyScenarioCalculator` erzeugt eine Ergebniszeile je Kalendermonat. `YearlyAggregationCalculator` aggregiert Jahreswerte ausschliesslich aus diesen Monatszeilen. `ScenarioCalculator` nutzt diese Monatsengine als Primaerpfad und leitet `ScenarioResult`, `ScenarioComparison` und Break-even-Jahr aus den aggregierten `YearResult`-Werten ab.
 
 Aktuelle Regeln:
 
@@ -39,7 +39,7 @@ Aktuelle Regeln:
 
 Investitionsdatum, EEG-Inbetriebnahme und Netzanschluss werden in der Monatsengine als getrennte Zeitpunkte mitgefuehrt. Der aktuelle Cashflow-Prototyp bucht noch keinen Capex-Zahlungsstrom und verwendet EEG-/Netzanschluss nicht als automatische Sperre fuer den Ertragsbeginn.
 
-`ScenarioCalculator bleibt vorerst ein Jahres-Wrapper` fuer die bestehende ScenarioComparison. Die neue Monatsengine ist der Ziel-Rechenkern fuer Monatsreihen; die Ablösung der ScenarioComparison erfolgt separat, sobald deren Ergebnisvertrag auf `YearResult` umgestellt wird.
+Der alte `AnnualInvestorCashflowCalculator` bleibt als separat testbarer Legacy-/Kompatibilitaetspfad bestehen. Er erzeugt keine `ScenarioComparison`-Kennzahlen mehr.
 
 ## Geplante Module
 

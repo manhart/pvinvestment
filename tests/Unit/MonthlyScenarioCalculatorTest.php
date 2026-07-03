@@ -5,7 +5,6 @@ namespace pvinvestment\tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use pvinvestment\classes\Calculators\MonthlyScenarioCalculator;
-use pvinvestment\classes\Calculators\ScenarioCalculator;
 use pvinvestment\classes\Calculators\YearlyAggregationCalculator;
 use pvinvestment\classes\Domain\BatteryModel;
 use pvinvestment\classes\Domain\FinancingAssumptions;
@@ -173,18 +172,6 @@ final class MonthlyScenarioCalculatorTest extends TestCase
         self::assertSame($this->sum($months, 'financingInterest'), $year->financingInterest);
         self::assertSame($this->sum($months, 'savingsContribution'), $year->savingsContribution);
         self::assertSame($months[11]->savingsEndValue, $year->savingsEndValue);
-    }
-
-    public function testScenarioCalculatorAnnualPathIsDocumentedAsTransitionWrapper(): void
-    {
-        $scenarioResult = (new ScenarioCalculator())->calculate($this->scenario(
-            pvAssumptions: new PvAssumptions(annualRevenue: 12000.0),
-        ));
-        $documentation = file_get_contents(__DIR__.'/../../docs/model-spec/rechenlogik.md');
-
-        self::assertSame(12000.0, $scenarioResult->cumulativeInvestorCashflow);
-        self::assertIsString($documentation);
-        self::assertStringContainsString('ScenarioCalculator bleibt vorerst ein Jahres-Wrapper', $documentation);
     }
 
     private function scenario(

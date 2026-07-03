@@ -28,4 +28,31 @@ final class YearResult
         public readonly float $savingsEndValue,
         public readonly float $freeCashflowAfterSavings,
     ) {}
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'year' => $this->year,
+            'pvRevenue' => $this->pvRevenue,
+            'batteryGrossRevenue' => $this->batteryGrossRevenue,
+            'batteryInvestorRevenue' => $this->batteryInvestorRevenue,
+            'batteryInvestorCosts' => $this->batteryInvestorCosts,
+            'operatingCosts' => $this->operatingCosts,
+            'financingInterest' => $this->financingInterest,
+            'financingPrincipal' => $this->financingPrincipal,
+            'depreciation' => $this->depreciation,
+            'taxableResultComponent' => $this->taxableResultComponent,
+            'taxCashflow' => $this->taxCashflow,
+            'investorCashflowBeforeSavings' => $this->investorCashflowBeforeSavings,
+            'savingsContribution' => $this->savingsContribution,
+            'savingsReturn' => $this->savingsReturn,
+            'savingsTax' => $this->savingsTax,
+            'savingsEndValue' => $this->savingsEndValue,
+            'freeCashflowAfterSavings' => $this->freeCashflowAfterSavings,
+            'months' => array_map(static fn(MonthResult $month): array => $month->toArray(), $this->months),
+        ];
+    }
 }

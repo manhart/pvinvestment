@@ -3,13 +3,18 @@ declare(strict_types=1);
 
 namespace pvinvestment\classes\Domain\Scenario;
 
-use pvinvestment\classes\Domain\CalculationResult;
+use pvinvestment\classes\Domain\Results\MonthResult;
+use pvinvestment\classes\Domain\Results\YearResult;
 
 final class ScenarioResult
 {
     /**
-     * @param list<CalculationResult> $annualResults
+     * @param list<YearResult> $annualResults Kept as compatibility alias for aggregated yearly results.
+     * @param list<MonthResult> $monthlyResults
+     * @param list<YearResult>|null $yearlyResults
      */
+    public readonly array $yearlyResults;
+
     public function __construct(
         public readonly string $id,
         public readonly string $description,
@@ -21,7 +26,11 @@ final class ScenarioResult
         public readonly float $savingsPlanEndingCapital,
         public readonly float $totalInvestorResult,
         public readonly ?int $breakEvenYear,
-    ) {}
+        public readonly array $monthlyResults = [],
+        ?array $yearlyResults = null,
+    ) {
+        $this->yearlyResults = $yearlyResults ?? $annualResults;
+    }
 
     /**
      * @return array<string, mixed>
@@ -38,8 +47,9 @@ final class ScenarioResult
             'savingsPlanEndingCapital' => $this->savingsPlanEndingCapital,
             'totalInvestorResult' => $this->totalInvestorResult,
             'breakEvenYear' => $this->breakEvenYear,
-            'annualResults' => array_map(static fn(CalculationResult $result): array => $result->toArray(), $this->annualResults),
+            'monthlyResults' => array_map(static fn(MonthResult $result): array => $result->toArray(), $this->monthlyResults),
+            'yearlyResults' => array_map(static fn(YearResult $result): array => $result->toArray(), $this->yearlyResults),
+            'annualResults' => array_map(static fn(YearResult $result): array => $result->toArray(), $this->annualResults),
         ];
     }
 }
-

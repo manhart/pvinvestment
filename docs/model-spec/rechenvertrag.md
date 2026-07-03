@@ -32,6 +32,7 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 - `MoneyAmount` speichert Geld intern als Cent-Integer und ist der Einstiegspunkt fuer centgenaue Addition, Subtraktion und finale Rundung.
 - `PercentageRate` macht Dezimalrate, Prozentwert und Basispunkte explizit.
 - `TaxCalculator` rundet `taxAmount` und `cashflowTaxPayment` auf Cent.
+- `ScenarioCalculator` rundet aggregierte Scenario-Kennzahlen am Ergebnisrand auf Cent. Die Monatswerte selbst bleiben ungerundet und werden erst fuer Jahres-/Scenario-Kennzahlen summiert.
 - Tests mit Monatsfaktoren verwenden Deltas.
 - Andere Zwischenwerte bleiben im Prototyp ungerundet, bis die mehrjaehrige Monatsrechnung feststeht.
 
@@ -72,7 +73,14 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 - Investitionsdatum, AfA-Beginn, EEG-Inbetriebnahme, Netzanschluss, Ertragsbeginn, Zinsbeginn, Tilgungsbeginn, Steuerzahlungsjahr und Sparplan-Einzahlungsstart sind getrennte Felder.
 - `YearMonth` ist das Value Object fuer Monatsvergleiche in der Monatsengine.
 - `MonthlyScenarioCalculator` erzeugt Monatswerte; `YearlyAggregationCalculator` bildet Jahreswerte ausschliesslich als Summe dieser Monatswerte.
-- Der Jahresprototyp verwendet:
+- `ScenarioCalculator` ist der Primaerpfad fuer Szenarien und ScenarioComparison. Er berechnet zuerst Monatswerte, aggregiert daraus Jahreswerte und summiert daraus:
+  - kumulierten Investor-Cashflow vor Sparplan
+  - kumulierten Steuer-Cashflow
+  - kumulierte Batterieerloese Investor
+  - Sparplan-Endwert
+  - Gesamtergebnis Investor
+  - Break-even-Jahr
+- Der Monatsprototyp verwendet:
   - Ertragsbeginn fuer PV- und Batterieerloese sowie laufende PV-/Batteriekosten.
   - AfA-Beginn fuer normale AfA und Sonder-AfA.
   - Zinsbeginn fuer steuerliche und cashflowseitige Zinsen.
@@ -81,3 +89,5 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
   - Sparplan-Einzahlungsstart fuer monatliche Sparplanbeitraege.
 - EEG-Inbetriebnahme und Netzanschluss werden aktuell nur mitgefuehrt, aber noch nicht als fachliche Sperre fuer Ertragsbeginn verwendet.
 - Ohne `taxPaymentDelayMonths` wird `taxCashflow` in Monatsreihen im Dezember des `taxPaymentYear` gebucht. Bei gesetztem Monatsversatz wird der Cashflow-Monat aus Dezember plus `taxPaymentDelayMonths` abgeleitet.
+- `ScenarioResult::annualResults` bleibt als Kompatibilitaetsname erhalten und enthaelt dieselben aggregierten `YearResult`-Werte wie `ScenarioResult::yearlyResults`. `ScenarioResult::monthlyResults` enthaelt die zugrunde liegenden `MonthResult`-Zeilen.
+- `AnnualInvestorCashflowCalculator` bleibt separat testbar, ist aber kein Hauptpfad fuer `ScenarioCalculator`.

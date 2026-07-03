@@ -25,4 +25,31 @@ final class MonthResult
         public readonly float $savingsEndValue,
         public readonly float $freeCashflowAfterSavings,
     ) {}
+
+    /**
+     * @return array<string, float|int>
+     */
+    public function toArray(): array
+    {
+        return [
+            'year' => $this->year,
+            'month' => $this->month,
+            'pvRevenue' => $this->pvRevenue,
+            'batteryGrossRevenue' => $this->batteryGrossRevenue,
+            'batteryInvestorRevenue' => $this->batteryInvestorRevenue,
+            'batteryInvestorCosts' => $this->batteryInvestorCosts,
+            'operatingCosts' => $this->operatingCosts,
+            'financingInterest' => $this->financingInterest,
+            'financingPrincipal' => $this->financingPrincipal,
+            'depreciation' => $this->depreciation,
+            'taxableResultComponent' => $this->taxableResultComponent,
+            'taxCashflow' => $this->taxCashflow,
+            'investorCashflowBeforeSavings' => $this->investorCashflowBeforeSavings,
+            'savingsContribution' => $this->savingsContribution,
+            'savingsReturn' => $this->savingsReturn,
+            'savingsTax' => $this->savingsTax,
+            'savingsEndValue' => $this->savingsEndValue,
+            'freeCashflowAfterSavings' => $this->freeCashflowAfterSavings,
+        ];
+    }
 }

@@ -38,6 +38,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Sparplan: `startingCapital`, `monthlyContribution`, `annualContribution`, `positiveCashflowReinvestmentRate`.
 - Monatsengine: `MonthResult` mit monatlichen PV-/Batterieerloesen, Kosten, Zins, Tilgung, AfA, Steuer-Cashflow, Investor-Cashflow, Sparplanbeitrag und Sparplan-Endwert.
 - Jahresaggregation: `YearResult` wird aus `MonthResult`-Zeilen aggregiert.
+- Szenario: `ScenarioCalculator` nutzt `MonthlyScenarioCalculator` und `YearlyAggregationCalculator` als Primaerpfad. `ScenarioResult` enthaelt Monatswerte und aggregierte Jahreswerte; `ScenarioComparison` summiert die Kennzahlen aus diesen Jahreswerten.
 
 ## Fehlende Parameter aus dem Parameterkatalog
 
@@ -47,7 +48,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Finanzierung: Darlehensbetrag, Auszahlung, Zinssatz, Tilgungssatz, Annuitaet, Zinsbindung, Laufzeit, Sondertilgung, tilgungsfreie Monate, Finanzierungsnebenkosten.
 - Steuer: Ruhestandssaetze als eigene Phase, IAB-Prozentsatz statt Betrag, steuerliche Rueckgaengigmachung des IAB, manueller Wechsel von degressiv zu linear mit Wechseljahr, asset-spezifische Zinsabzugs-Konfiguration, detaillierte gesetzliche Grenzen fuer Verlustvortrag/-ruecktrag.
 - Sparplan: erwartete Rendite, Kostenquote, Kapitalertragsteuer, Teilfreistellung, Sparer-Pauschbetrag, Entnahmephase.
-- Ergebnisse: monatliche Ergebnisreihen, Restschuldverlauf, Buchwerte ueber mehrere Jahre, NPV/IRR, Szenariovergleich.
+- Ergebnisse: Restschuldverlauf, Buchwerte ueber mehrere Jahre als Scenario-Ausgabe, NPV/IRR.
 
 ## Fachliche Bewertung
 
@@ -62,15 +63,15 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Negative Nettomargen werden proportional verteilt und nicht automatisch auf 0 gekappt.
 - Batterie-Capex wird nach Capex-Shares als Investor-/Betreiberanteil ausgewiesen, aber im Jahresprototyp noch nicht automatisch als laufender Cashflow abgezogen.
 - Sparplan-Startkapital ist frei setzbar. Rendite, Steuern und Kosten des Sparplans fehlen noch.
-- Steuerzahlungsjahr und Steuerentstehungsjahr sind getrennt: `taxAmount` entsteht im Rechenjahr, `cashflowTaxPayment` wirkt nur, wenn `taxPaymentYear === calculationYear`.
+- Steuerzahlungsjahr und Steuerentstehungsjahr sind getrennt: `taxAmount` entsteht im Rechenjahr, die Monatsengine bucht den `taxCashflow` im berechneten Zahlungsmonat. Der Legacy-Jahresrechner weist `cashflowTaxPayment` nur aus, wenn `taxPaymentYear === calculationYear`.
 - Steuerliche Verlustnutzung ist parametrisierbar ueber `immediate`, `carry_forward`, `carry_back`, `manual` und `none`. `TaxLossLedger` haelt Verlustvortraege und Vorjahresgewinn-Kapazitaeten fuer mehrjaehrige Rechnungen.
 - Die Monatsengine bucht Steuerzahlungen oder Erstattungen im berechneten `taxCashflowYear/month`. Ohne Monatsversatz ist das Dezember des `taxPaymentYear`.
-- `ScenarioCalculator` bleibt vorerst der Jahrespfad fuer `ScenarioComparison`; die Monatsengine ist separat implementiert und getestet.
+- `ScenarioCalculator` ist jetzt der Monatsengine-Pfad fuer `ScenarioComparison`. Der alte `AnnualInvestorCashflowCalculator` bleibt separat testbar, erzeugt aber keine ScenarioComparison-Kennzahlen mehr.
 
 ## Technische Bewertung
 
 - Assumption- und Result-Klassen verwenden weiterhin Euro-`float`. Fuer explizite Cent-Arithmetik existiert `MoneyAmount`, Prozentwerte koennen mit `PercentageRate` erzeugt werden.
-- `TaxCalculator` rundet `taxAmount` und `cashflowTaxPayment` auf Cent. Andere Zwischenwerte bleiben ungerundet. Tests nutzen bei proportionalen Monatswerten `assertEqualsWithDelta`.
+- `TaxCalculator` rundet `taxAmount` und `cashflowTaxPayment` auf Cent. `ScenarioCalculator` rundet aggregierte Ergebniskennzahlen auf Cent, damit Monatsaddition keine Float-Drift in ScenarioComparison erzeugt. Andere Zwischenwerte bleiben ungerundet. Tests nutzen bei proportionalen Monatswerten `assertEqualsWithDelta`.
 - Vorzeichenkonvention: Erloese und positive Steuerzahlungen sind positive Eingabewerte; Kosten, Zinsen, Tilgung und Steuerzahlungen werden im Rechner subtrahiert. Negative `taxAmount` repraesentiert eine Steuererstattung. Diese Konvention ist brauchbar, aber noch nicht zentral dokumentiert oder typisiert.
 - Validierung ist partiell vorhanden: negative Kosten/Erloese werden in einigen Assumptions verboten, Prozentanteile muessen zwischen 0 und 1 liegen, Revenue-/Cost-Shares muessen je 1 ergeben.
 - `CalculationResult::toArray()` wandelt auch Jahres-/Monatswerte zu float. Fuer ein spaeteres API kann das sinnvoll sein, fachlich sind es aber Integer-Einheiten.
@@ -82,7 +83,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 3. Einheiten: siehe `rechenvertrag.md`.
 4. Uneinheitliche Vorzeichen: nicht direkt widerspruechlich, aber negative Steuerwerte als Erstattung sind noch nicht als eigener Typ modelliert.
 5. Floating Point: ja, Assumptions und viele Zwischenwerte bleiben `float`; `MoneyAmount` bietet centgenaue Arithmetik fuer finale Geldwerte.
-6. Rundung: Steuerbetrag und cashflowwirksame Steuerzahlung werden auf Cent gerundet; weitere Ergebnisrundungen sind noch zu definieren.
+6. Rundung: Steuerbetrag, cashflowwirksame Steuerzahlung und aggregierte Scenario-Kennzahlen werden auf Cent gerundet; fachliche Zwischenwerte bleiben ungerundet.
 7. Steuerlogik: AfA, Sonder-AfA, Restbuchwerte und Verlustnutzung sind mehrjaehrig nachvollziehbar; IAB-Rueckgaengigmachung und gesetzliche Detailgrenzen fehlen noch.
 8. Doppelte Kaufnebenkosten: im aktuellen Pfad verhindert durch getrennte Felder.
 9. Zinsen: konsistent zwischen Steuer und Cashflow.

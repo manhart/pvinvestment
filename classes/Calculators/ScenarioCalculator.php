@@ -3,79 +3,64 @@ declare(strict_types=1);
 
 namespace pvinvestment\classes\Calculators;
 
-use pvinvestment\classes\Domain\CalculationResult;
-use pvinvestment\classes\Domain\ProjectTimingAssumptions;
-use pvinvestment\classes\Domain\SavingsPlanAssumptions;
+use pvinvestment\classes\Domain\MoneyAmount;
 use pvinvestment\classes\Domain\Scenario\ScenarioComparison;
 use pvinvestment\classes\Domain\Scenario\ScenarioInput;
 use pvinvestment\classes\Domain\Scenario\ScenarioResult;
-use pvinvestment\classes\Domain\TaxAssumptions;
-use pvinvestment\classes\Domain\Tax\TaxLossLedger;
 
 final class ScenarioCalculator
 {
+    private readonly MonthlyScenarioCalculator $monthlyCalculator;
+    private readonly YearlyAggregationCalculator $yearlyAggregationCalculator;
+
     public function __construct(
-        private readonly AnnualInvestorCashflowCalculator $annualCalculator = new AnnualInvestorCashflowCalculator(),
-    ) {}
+        ?MonthlyScenarioCalculator $monthlyCalculator = null,
+        ?YearlyAggregationCalculator $yearlyAggregationCalculator = null,
+    ) {
+        $this->monthlyCalculator = $monthlyCalculator ?? new MonthlyScenarioCalculator();
+        $this->yearlyAggregationCalculator = $yearlyAggregationCalculator ?? new YearlyAggregationCalculator();
+    }
 
     public function calculate(ScenarioInput $scenario): ScenarioResult
     {
-        $annualResults = [];
+        $monthlyResults = $this->monthlyCalculator->calculate($scenario);
+        $yearlyResults = $this->yearlyAggregationCalculator->aggregate($monthlyResults);
         $cumulativeInvestorCashflow = 0.0;
         $cumulativeTaxCashflow = 0.0;
         $cumulativeInvestorBatteryRevenue = 0.0;
         $breakEvenYear = null;
-        $runningSavingsCapital = $scenario->savingsPlanAssumptions->startingCapital;
-        $taxLossLedger = new TaxLossLedger();
 
-        for($offset = 0; $offset < $scenario->durationYears; $offset++) {
-            $year = $scenario->taxAssumptions->calculationYear + $offset;
-            $taxAssumptions = $this->taxAssumptionsForYear($scenario->taxAssumptions, $year);
-            $timingAssumptions = $this->timingAssumptionsForYear(
-                scenario: $scenario,
-                year: $year,
-            );
-            $savingsPlanAssumptions = new SavingsPlanAssumptions(
-                startingCapital: $runningSavingsCapital,
-                monthlyContribution: $scenario->savingsPlanAssumptions->monthlyContribution,
-                annualContribution: $scenario->savingsPlanAssumptions->annualContribution,
-                positiveCashflowReinvestmentRate: $scenario->savingsPlanAssumptions->positiveCashflowReinvestmentRate,
-            );
-
-            $annualResult = $this->annualCalculator->calculate(
-                pvAssumptions: $scenario->pvAssumptions,
-                batteryModel: $scenario->batteryModel,
-                financingAssumptions: $scenario->financingAssumptions,
-                taxAssumptions: $taxAssumptions,
-                savingsPlanAssumptions: $savingsPlanAssumptions,
-                timingAssumptions: $timingAssumptions,
-                taxLossLedger: $taxLossLedger,
-            );
-            $annualResults[] = $annualResult;
-
-            $cumulativeInvestorCashflow += $annualResult->annualInvestorCashflow;
-            $cumulativeTaxCashflow += $annualResult->annualTaxPayment;
-            $cumulativeInvestorBatteryRevenue += $annualResult->investorBatteryRevenue;
-            $runningSavingsCapital = $annualResult->savingsPlanEndingCapital;
+        foreach($yearlyResults as $yearResult) {
+            $cumulativeInvestorCashflow += $yearResult->investorCashflowBeforeSavings;
+            $cumulativeTaxCashflow += $yearResult->taxCashflow;
+            $cumulativeInvestorBatteryRevenue += $yearResult->batteryInvestorRevenue;
 
             if($breakEvenYear === null && $cumulativeInvestorCashflow >= 0.0) {
-                $breakEvenYear = $year;
+                $breakEvenYear = $yearResult->year;
             }
         }
 
-        $totalInvestorResult = $cumulativeInvestorCashflow + $runningSavingsCapital;
+        $lastYear = $yearlyResults[count($yearlyResults) - 1] ?? null;
+        $cumulativeInvestorCashflow = $this->money($cumulativeInvestorCashflow);
+        $cumulativeTaxCashflow = $this->money($cumulativeTaxCashflow);
+        $cumulativeInvestorBatteryRevenue = $this->money($cumulativeInvestorBatteryRevenue);
+        $savingsPlanEndingCapital = $this->money($lastYear?->savingsEndValue ?? $scenario->savingsPlanAssumptions->startingCapital);
+        $totalInvestorResult = $cumulativeInvestorCashflow + $savingsPlanEndingCapital;
+        $totalInvestorResult = $this->money($totalInvestorResult);
 
         return new ScenarioResult(
             id: $scenario->id,
             description: $scenario->description,
             durationYears: $scenario->durationYears,
-            annualResults: $annualResults,
+            annualResults: $yearlyResults,
             cumulativeInvestorCashflow: $cumulativeInvestorCashflow,
             cumulativeTaxCashflow: $cumulativeTaxCashflow,
             cumulativeInvestorBatteryRevenue: $cumulativeInvestorBatteryRevenue,
-            savingsPlanEndingCapital: $runningSavingsCapital,
+            savingsPlanEndingCapital: $savingsPlanEndingCapital,
             totalInvestorResult: $totalInvestorResult,
             breakEvenYear: $breakEvenYear,
+            monthlyResults: $monthlyResults,
+            yearlyResults: $yearlyResults,
         );
     }
 
@@ -92,62 +77,8 @@ final class ScenarioCalculator
         return ScenarioComparison::fromResults($results);
     }
 
-    private function taxAssumptionsForYear(TaxAssumptions $source, int $year): TaxAssumptions
+    private function money(float $amount): float
     {
-        return new TaxAssumptions(
-            annualTaxPayment: $source->annualTaxPayment,
-            calculationYear: $year,
-            incomeTaxRate: $source->incomeTaxRate,
-            acquisitionCost: $source->acquisitionCost,
-            capitalizableAncillaryCosts: $source->capitalizableAncillaryCosts,
-            immediatelyDeductibleCosts: $source->immediatelyDeductibleCosts,
-            depreciationStartYear: $source->depreciationStartYear,
-            depreciationStartMonth: $source->depreciationStartMonth,
-            depreciationMethod: $source->depreciationMethod,
-            linearDepreciationRate: $source->linearDepreciationRate,
-            decliningDepreciationRate: $source->decliningDepreciationRate,
-            iabEnabled: $source->iabEnabled,
-            iabAmount: $source->iabAmount,
-            iabDeductionYear: $source->iabDeductionYear,
-            iabAdditionYear: $source->iabAdditionYear,
-            specialDepreciationEnabled: $source->specialDepreciationEnabled,
-            specialDepreciationRate: $source->specialDepreciationRate,
-            specialDepreciationStartYear: $source->specialDepreciationStartYear,
-            specialDepreciationYears: $source->specialDepreciationYears,
-            taxPaymentDelayYears: $source->taxPaymentDelayYears,
-            lossHandlingStrategy: $source->lossHandlingStrategy,
-            maxLossCarryBackAmount: $source->maxLossCarryBackAmount,
-            maxLossCarryBackYears: $source->maxLossCarryBackYears,
-            manualUsableLossByYear: $source->manualUsableLossByYear,
-            taxPaymentDelayMonths: $source->taxPaymentDelayMonths,
-            taxRateByYear: $source->taxRateByYear,
-        );
-    }
-
-    private function timingAssumptionsForYear(ScenarioInput $scenario, int $year): ProjectTimingAssumptions
-    {
-        $source = $scenario->timingAssumptions ?? ProjectTimingAssumptions::fromTaxAssumptions($scenario->taxAssumptions);
-
-        return new ProjectTimingAssumptions(
-            calculationYear: $year,
-            investmentYear: $source->investmentYear,
-            investmentMonth: $source->investmentMonth,
-            depreciationStartYear: $source->depreciationStartYear,
-            depreciationStartMonth: $source->depreciationStartMonth,
-            eegCommissioningYear: $source->eegCommissioningYear,
-            eegCommissioningMonth: $source->eegCommissioningMonth,
-            gridConnectionYear: $source->gridConnectionYear,
-            gridConnectionMonth: $source->gridConnectionMonth,
-            revenueStartYear: $source->revenueStartYear,
-            revenueStartMonth: $source->revenueStartMonth,
-            interestStartYear: $source->interestStartYear,
-            interestStartMonth: $source->interestStartMonth,
-            repaymentStartYear: $source->repaymentStartYear,
-            repaymentStartMonth: $source->repaymentStartMonth,
-            taxPaymentYear: $year + $scenario->taxAssumptions->taxPaymentDelayYears,
-            savingsPlanContributionStartYear: $source->savingsPlanContributionStartYear,
-            savingsPlanContributionStartMonth: $source->savingsPlanContributionStartMonth,
-            annualSavingsPlanContributionMonth: $source->annualSavingsPlanContributionMonth,
-        );
+        return MoneyAmount::fromEuro($amount)->toEuro();
     }
 }
