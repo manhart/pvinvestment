@@ -78,6 +78,12 @@ Berechnet Startkapital, laufende Einzahlungen, Reinvestition positiver Cashflows
 
 Vergleicht mehrere Parametersaetze auf Basis identischer Kennzahlen. Excel-Abweichungen sind zulaessig, wenn sie fachlich begruendet und dokumentiert sind.
 
+## Read-only UI-Pfad
+
+Die erste POOL-GUI ist ein read-only Dashboard. `GUI_PvInvestment` baut keine eigene Rechenlogik auf, sondern laedt anonymisierte Szenarien aus `DemoScenarioFactory`, berechnet sie mit `ScenarioCalculator` und rendert Kennzahlen, Szenariovergleich, Jahreswerte und optionale Monatswerte.
+
+Es gibt in diesem UI-Pfad keine Persistenz, keine Datenbank und keine produktiven Angebots- oder Investorendaten.
+
 ## Nicht-Ziele der Initialstruktur
 
 - keine produktive Berechnung

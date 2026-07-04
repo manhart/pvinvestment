@@ -1,0 +1,107 @@
+<div id="{MODULE_ID}" class="pvi-module">
+    <section class="pvi-toolbar">
+        <div>
+            <h1>PV-Investitionsrechner</h1>
+            <p>Read-only Demo-Dashboard fuer anonymisierte Modellrechnungen. Keine Steuerberatung.</p>
+        </div>
+    </section>
+
+    <section class="pvi-section">
+        <div class="pvi-section__head">
+            <div>
+                <h2>{PRIMARY_SCENARIO_TITLE}</h2>
+                <p>Anonymisiertes Demo-Szenario aus der Domain-Scenario-Engine.</p>
+                <p>{PRIMARY_SCENARIO_ASSUMPTIONS}</p>
+            </div>
+        </div>
+        <div class="pvi-kpi-grid">
+            {DASHBOARD_CARDS}
+        </div>
+    </section>
+
+    <section class="pvi-section">
+        <div class="pvi-section__head">
+            <div>
+                <h2>Szenariovergleich</h2>
+                <p>Batterie Vollerwerb gegen Profit-Sharing 65/35 auf unterschiedlichen Sharing-Basen.</p>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm pvi-table">
+                <thead>
+                <tr>
+                    <th>Szenario</th>
+                    <th>Investor-Cashflow</th>
+                    <th>Steuer-Cashflow</th>
+                    <th>Batterieerloese Investor</th>
+                    <th>Batterie-Capex Investor</th>
+                    <th>Sparplan-Endwert</th>
+                    <th>Gesamtergebnis</th>
+                    <th>Break-even</th>
+                    <th>Differenz zur Basis</th>
+                </tr>
+                </thead>
+                <tbody>
+                {COMPARISON_ROWS}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="pvi-section">
+        <div class="pvi-section__head">
+            <div>
+                <h2>Jahreswerte</h2>
+                <p>Aggregierte Jahreswerte aus den Monatsreihen des Demo-Szenarios.</p>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm pvi-table">
+                <thead>
+                <tr>
+                    <th>Jahr</th>
+                    <th>PV-Erloese</th>
+                    <th>Batterieerloese Investor</th>
+                    <th>Batterie-Kosten Investor</th>
+                    <th>Batterie-Capex Investor</th>
+                    <th>Ersatz-Capex Investor</th>
+                    <th>Zinsen</th>
+                    <th>Tilgung</th>
+                    <th>Steuer-Cashflow</th>
+                    <th>Sparplan-Endwert</th>
+                    <th>Investor-Cashflow</th>
+                    <th>Kumulierter Investor-Cashflow</th>
+                </tr>
+                </thead>
+                <tbody>
+                {YEAR_ROWS}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="pvi-section">
+        <details class="pvi-details">
+            <summary>Monatswerte anzeigen</summary>
+            <div class="table-responsive">
+                <table class="table table-sm pvi-table">
+                    <thead>
+                    <tr>
+                        <th>Monat</th>
+                        <th>PV-Erloese</th>
+                        <th>Batterieerloese Investor</th>
+                        <th>Batterie-Kosten Investor</th>
+                        <th>Batterie-Capex Investor</th>
+                        <th>Ersatz-Capex Investor</th>
+                        <th>Steuer-Cashflow</th>
+                        <th>Investor-Cashflow</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {MONTH_ROWS}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+</div>

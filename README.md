@@ -12,7 +12,7 @@ Die Anwendung soll investororientierte Szenarien transparenter und flexibler abb
 
 ## Entwicklungsstand
 
-Diese Version enthaelt eine POOL-kompatible Anwendungsstruktur und einen getesteten Domain-Prototyp ohne produktive GUI und ohne Datenbank.
+Diese Version enthaelt eine POOL-kompatible Anwendungsstruktur, einen getesteten Domain-Prototyp und ein erstes read-only Dashboard ohne Datenbank und ohne Persistenz.
 
 Implementiert sind:
 
@@ -23,12 +23,13 @@ Implementiert sind:
 - Steuerlogik mit IAB-Grundmodell, Sonder-AfA, Verlustnutzung und Steuer-Cashflow-Timing.
 - Szenariovergleich fuer mehrere Investorenszenarien.
 - Monatsengine mit Aggregation zu Jahreswerten.
+- Read-only POOL-Dashboard mit anonymisierten Demo-Szenarien.
 - Geld-/Prozent-Value-Objects fuer zentrale Rundungs- und Prozentlogik.
 - Anonymisierte Domain-Referenzwerte und Excel-Abweichungsdokumentation.
 
 Noch nicht enthalten:
 
-- produktive Bedienoberflaechen fuer Eingabe und Auswertung
+- produktive Bedienoberflaechen fuer Eingabe und Bearbeitung
 - Persistenz von Szenarien
 - vollstaendige PV-Ertragsmodellierung mit saisonalen Profilen
 - gesetzliche Steuerberatung oder automatische steuerliche Einzelfallbewertung
@@ -63,6 +64,16 @@ Die Berechnungslogik ist in klar getrennten Klassen aufgebaut:
 Interne Berechnungen erfolgen monatlich, wo Zeitpunkte relevant sind. Jahreswerte werden daraus aggregiert.
 
 Der Rechner ist ein Planungs- und Transparenzwerkzeug. Er ist keine Steuerberatung.
+
+## Read-only Demo-Dashboard
+
+Die Startseite rendert aktuell anonymisierte Demo-Szenarien aus `classes/Demo/DemoScenarioFactory.php`:
+
+- Batterie Vollerwerb
+- Profit-Sharing 65/35 auf `gross_revenue`
+- Profit-Sharing 65/35 auf `net_revenue`
+
+Die GUI liegt unter `guis/GUI_PvInvestment/` und ruft nur die Factory sowie `ScenarioCalculator` auf. Es gibt keine Persistenz, keine Datenbank und keine echten Angebots- oder Investorendaten in den Demo-Szenarien.
 
 ## Dokumentation
 

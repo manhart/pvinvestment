@@ -22,6 +22,8 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - `classes/Calculators/DepreciationCalculator.php`
 - `classes/Calculators/MonthlyScenarioCalculator.php`
 - `classes/Calculators/YearlyAggregationCalculator.php`
+- `classes/Demo/DemoScenarioFactory.php`
+- `guis/GUI_PvInvestment/GUI_PvInvestment.php`
 - `tests/Unit/TaxCalculatorTest.php`
 - `tests/Unit/AnnualInvestorCashflowCalculatorTest.php`
 
@@ -39,6 +41,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Monatsengine: `MonthResult` mit monatlichen PV-/Batterieerloesen, Kosten, Zins, Tilgung, AfA, Steuer-Cashflow, Investor-Cashflow, Sparplanbeitrag und Sparplan-Endwert.
 - Jahresaggregation: `YearResult` wird aus `MonthResult`-Zeilen aggregiert.
 - Szenario: `ScenarioCalculator` nutzt `MonthlyScenarioCalculator` und `YearlyAggregationCalculator` als Primaerpfad. `ScenarioResult` enthaelt Monatswerte und aggregierte Jahreswerte; `ScenarioComparison` summiert die Kennzahlen aus diesen Jahreswerten.
+- Read-only UI: `DemoScenarioFactory` erzeugt anonymisierte Demo-Szenarien; `GUI_PvInvestment` rendert Dashboard, Szenariovergleich, Jahreswerte und Monatswerte ohne eigene Rechenformeln.
 
 ## Fehlende Parameter aus dem Parameterkatalog
 
@@ -67,6 +70,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Steuerliche Verlustnutzung ist parametrisierbar ueber `immediate`, `carry_forward`, `carry_back`, `manual` und `none`. `TaxLossLedger` haelt Verlustvortraege und Vorjahresgewinn-Kapazitaeten fuer mehrjaehrige Rechnungen.
 - Die Monatsengine bucht Steuerzahlungen oder Erstattungen im berechneten `taxCashflowYear/month`. Ohne Monatsversatz ist das Dezember des `taxPaymentYear`.
 - `ScenarioCalculator` ist jetzt der Monatsengine-Pfad fuer `ScenarioComparison`. Der alte `AnnualInvestorCashflowCalculator` bleibt separat testbar, erzeugt aber keine ScenarioComparison-Kennzahlen mehr.
+- Die erste POOL-GUI ist read-only. Sie verwendet nur anonymisierte Demo-Szenarien, keine Persistenz und keine echten Angebotsdaten.
 
 ## Technische Bewertung
 
