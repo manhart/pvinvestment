@@ -2,15 +2,32 @@
     <section class="pvi-toolbar">
         <div>
             <h1>PV-Investitionsrechner</h1>
-            <p>Read-only Demo-Dashboard fuer anonymisierte Modellrechnungen. Keine Steuerberatung.</p>
+            <p>Serverseitige Modellrechnung fuer anonymisierte Szenarien. Keine Steuerberatung.</p>
         </div>
     </section>
 
     <section class="pvi-section">
         <div class="pvi-section__head">
             <div>
+                <h2>Szenario eingeben</h2>
+                <p>Die Eingaben werden nur fuer diese Anfrage berechnet und nicht gespeichert.</p>
+            </div>
+        </div>
+        {FORM_ERRORS}
+        <form method="post" class="pvi-form" action="">
+            {FORM_HTML}
+            <div class="pvi-form__actions">
+                <button type="submit" class="btn btn-primary">Szenario berechnen</button>
+                <a class="btn btn-outline-secondary" href="">Demo-Werte laden</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="pvi-section">
+        <div class="pvi-section__head">
+            <div>
                 <h2>{PRIMARY_SCENARIO_TITLE}</h2>
-                <p>Anonymisiertes Demo-Szenario aus der Domain-Scenario-Engine.</p>
+                <p>Anonymisiertes Szenario aus der Domain-Scenario-Engine.</p>
                 <p>{PRIMARY_SCENARIO_ASSUMPTIONS}</p>
             </div>
         </div>

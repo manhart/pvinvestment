@@ -78,11 +78,17 @@ Berechnet Startkapital, laufende Einzahlungen, Reinvestition positiver Cashflows
 
 Vergleicht mehrere Parametersaetze auf Basis identischer Kennzahlen. Excel-Abweichungen sind zulaessig, wenn sie fachlich begruendet und dokumentiert sind.
 
-## Read-only UI-Pfad
+## UI-Pfad
 
-Die erste POOL-GUI ist ein read-only Dashboard. `GUI_PvInvestment` baut keine eigene Rechenlogik auf, sondern laedt anonymisierte Szenarien aus `DemoScenarioFactory`, berechnet sie mit `ScenarioCalculator` und rendert Kennzahlen, Szenariovergleich, Jahreswerte und optionale Monatswerte.
+Die erste POOL-GUI kombiniert Demo-Dashboard und serverseitiges Eingabeformular. `GUI_PvInvestment` baut keine eigene Rechenlogik auf, sondern nutzt diesen Pfad:
 
-Es gibt in diesem UI-Pfad keine Persistenz, keine Datenbank und keine produktiven Angebots- oder Investorendaten.
+`POST-Formular -> ScenarioFormData -> ScenarioFormValidator -> ScenarioFormMapper -> ScenarioCalculator -> Ergebnisanzeige`
+
+`DemoScenarioFactory` liefert anonymisierte Default-Werte fuer das Formular und die Vergleichsszenarien. Nach einem gueltigen POST wird das eingegebene Szenario mit `ScenarioCalculator` berechnet. Bei Validierungsfehlern bleiben die Eingaben erhalten und die Fehler werden angezeigt; es wird nichts gespeichert.
+
+Die GUI rendert Kennzahlen, Szenariovergleich, Jahreswerte und optionale Monatswerte. Es gibt in diesem UI-Pfad keine Persistenz, keine Datenbank und keine produktiven Angebots- oder Investorendaten.
+
+Der aktuelle Domain-Prototyp kennt noch keine vollstaendige PV-Produktionsrechnung aus kWp, spezifischem Ertrag, saisonaler Verteilung und Strompreisen. Das Formular fuehrt kWp und spezifischen Ertrag deshalb als Kontextfelder, nutzt fuer die Berechnung aber den explizit eingegebenen PV-Jahreserloes.
 
 ## Nicht-Ziele der Initialstruktur
 

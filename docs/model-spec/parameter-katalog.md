@@ -125,3 +125,24 @@ Die folgenden Startzeitpunkte sind unabhaengig voneinander zu erfassen:
 - Gesamtvermoegenseffekt
 - Renditekennzahlen
 - Szenariovergleich
+
+## Formularstatus im POOL-Prototyp
+
+Das serverseitige Eingabeformular nimmt Prozentwerte als Prozentzahl `0..100` entgegen und wandelt sie im `ScenarioFormMapper` an der Domain-Grenze in Dezimalraten `0..1` um. Geldwerte werden als Euro-Dezimalzahlen erwartet. Monate sind Kalendermonate `1..12`, Jahre sind Kalenderjahre.
+
+Aktuell editierbar und produktiv gemappt:
+
+- Projektdaten: Szenarioname, Startjahr, Laufzeit.
+- PV: expliziter PV-Jahreserloes und laufende PV-Betriebskosten.
+- Batterie: Modell `none`, `full_ownership`, `profit_sharing`, Bruttoerloes, Market Access Fee, Optimizer Fee, OPEX, `sharing_base`, Investor Revenue Share, Investor Cost Share, Capex, Investor Capex Share, Capex-Zahlungsmonat, Degradation, Ersatzinvestition, Ersatzkosten und Investor Replacement Cost Share.
+- Finanzierung: Fremdkapitalbetrag, Zinssatz p.a. und jaehrliche Tilgung. Der Mapper bildet daraus `annualInterest = debtAmount * interestRate` und `annualRepayment`.
+- Steuer: Einkommensteuersatz, IAB aktiv/Satz, Sonder-AfA aktiv/Satz, AfA-Methode, lineare/degressive AfA-Saetze, Verlustnutzung und Steuerzahlungsversatz in Monaten.
+- Kosten: Anschaffungskosten und Maklercourtage mit Behandlung `capitalize`, `immediate` oder `ignore`; Default ist aktivierungspflichtig und IAB-beguenstigt.
+- Timing: Investitionsdatum, AfA-Beginn, EEG-Inbetriebnahme, Netzanschluss, Ertragsbeginn, Zinsbeginn, Tilgungsbeginn.
+- Sparplan: Startkapital, monatliche Einzahlung, jaehrliche Einzahlung, Reinvestitionsquote aus positivem Cashflow und Einzahlungszeitpunkte.
+
+Aktuell im Formular sichtbar, aber noch nicht als eigene produktive Fachlogik verwendet:
+
+- Anlagenleistung kWp und spezifischer Jahresertrag: Kontextfelder; der Rechner nutzt weiterhin den expliziten PV-Jahreserloes.
+- Betriebskostensteigerung: validiert, aber noch nicht in eine Kostenzeitreihe ueberfuehrt.
+- Erwartete Sparplanrendite, Kostenquote und Kapitalertragsteuer sind noch nicht Teil des Formulars, weil der Sparplan-Prototyp diese Werte fachlich noch nicht berechnet.

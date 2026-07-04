@@ -41,7 +41,8 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Monatsengine: `MonthResult` mit monatlichen PV-/Batterieerloesen, Kosten, Zins, Tilgung, AfA, Steuer-Cashflow, Investor-Cashflow, Sparplanbeitrag und Sparplan-Endwert.
 - Jahresaggregation: `YearResult` wird aus `MonthResult`-Zeilen aggregiert.
 - Szenario: `ScenarioCalculator` nutzt `MonthlyScenarioCalculator` und `YearlyAggregationCalculator` als Primaerpfad. `ScenarioResult` enthaelt Monatswerte und aggregierte Jahreswerte; `ScenarioComparison` summiert die Kennzahlen aus diesen Jahreswerten.
-- Read-only UI: `DemoScenarioFactory` erzeugt anonymisierte Demo-Szenarien; `GUI_PvInvestment` rendert Dashboard, Szenariovergleich, Jahreswerte und Monatswerte ohne eigene Rechenformeln.
+- UI: `DemoScenarioFactory` erzeugt anonymisierte Demo-Szenarien; `GUI_PvInvestment` rendert Formular, Dashboard, Szenariovergleich, Jahreswerte und Monatswerte ohne eigene Rechenformeln.
+- Formularpfad: `ScenarioFormData`, `ScenarioFormValidator` und `ScenarioFormMapper` erzeugen aus serverseitigen POST-Daten ein `ScenarioInput`. `GUI_PvInvestment` rendert Formular, Validierungsfehler und Ergebnisse, fuehrt aber keine Rechenformeln aus.
 
 ## Fehlende Parameter aus dem Parameterkatalog
 
@@ -51,6 +52,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Finanzierung: Darlehensbetrag, Auszahlung, Zinssatz, Tilgungssatz, Annuitaet, Zinsbindung, Laufzeit, Sondertilgung, tilgungsfreie Monate, Finanzierungsnebenkosten.
 - Steuer: Ruhestandssaetze als eigene Phase, steuerliche Rueckgaengigmachung des IAB, manueller Wechsel von degressiv zu linear mit Wechseljahr, asset-spezifische Zinsabzugs-Konfiguration, detaillierte gesetzliche Grenzen fuer Verlustvortrag/-ruecktrag.
 - Sparplan: erwartete Rendite, Kostenquote, Kapitalertragsteuer, Teilfreistellung, Sparer-Pauschbetrag, Entnahmephase.
+- UI/Formular: freie Betreiberanteile, taxRateByYear-Editor, mehrere Batterieersatzereignisse, mehrere Cost Components und produktive PV-Ertragsrechnung aus kWp/spezifischem Ertrag.
 - Ergebnisse: Restschuldverlauf, Buchwerte ueber mehrere Jahre als Scenario-Ausgabe, NPV/IRR.
 
 ## Fachliche Bewertung
@@ -70,7 +72,10 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Steuerliche Verlustnutzung ist parametrisierbar ueber `immediate`, `carry_forward`, `carry_back`, `manual` und `none`. `TaxLossLedger` haelt Verlustvortraege und Vorjahresgewinn-Kapazitaeten fuer mehrjaehrige Rechnungen.
 - Die Monatsengine bucht Steuerzahlungen oder Erstattungen im berechneten `taxCashflowYear/month`. Ohne Monatsversatz ist das Dezember des `taxPaymentYear`.
 - `ScenarioCalculator` ist jetzt der Monatsengine-Pfad fuer `ScenarioComparison`. Der alte `AnnualInvestorCashflowCalculator` bleibt separat testbar, erzeugt aber keine ScenarioComparison-Kennzahlen mehr.
-- Die erste POOL-GUI ist read-only. Sie verwendet nur anonymisierte Demo-Szenarien, keine Persistenz und keine echten Angebotsdaten.
+- Die erste POOL-GUI ist nicht persistent. Sie verwendet nur anonymisierte Demo-Szenarien und ein serverseitiges Formular. Nach gueltigem POST berechnet sie ein `ScenarioInput` aus FormData/Validator/Mapper mit `ScenarioCalculator`.
+- Maklercourtage wird im Formular standardmaessig als aktivierungspflichtige, IAB-beguenstigte Anschaffungsnebenkosten gemappt. Die Alternativen `sofort abzugsfaehig` und `nicht beruecksichtigen` sind explizit parametriert und getestet.
+- Formular-Prozentwerte werden als Prozentzahl `0..100` validiert und im Mapper in Domain-Raten `0..1` uebersetzt.
+- kWp, spezifischer Ertrag und Betriebskostensteigerung sind im Formular noch Kontextfelder. Die produktive Berechnung nutzt den explizit eingegebenen PV-Jahreserloes.
 
 ## Technische Bewertung
 

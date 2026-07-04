@@ -128,6 +128,100 @@ body {
     color: #9f2f2f;
 }
 
+.pvi-alert {
+    background: #fff4f4;
+    border: 1px solid #efb4b4;
+    border-radius: 8px;
+    color: #742626;
+    margin-bottom: 14px;
+    padding: 12px;
+}
+
+.pvi-alert ul {
+    margin: 8px 0 0;
+}
+
+.pvi-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pvi-form__fieldset {
+    border: 1px solid #e1e6ee;
+    border-radius: 8px;
+    margin: 0;
+    padding: 14px;
+}
+
+.pvi-form__fieldset legend {
+    color: #1d252d;
+    float: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding: 0 4px;
+    width: auto;
+}
+
+.pvi-form__note {
+    color: #637083;
+    font-size: 0.86rem;
+    margin: -4px 0 12px;
+}
+
+.pvi-form__grid {
+    display: grid;
+    gap: 10px 12px;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.pvi-form__field {
+    color: #27313e;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.86rem;
+    font-weight: 600;
+    gap: 5px;
+    min-width: 0;
+}
+
+.pvi-form__field input,
+.pvi-form__field select {
+    border: 1px solid #cfd6e1;
+    border-radius: 6px;
+    color: #1d252d;
+    font: inherit;
+    min-height: 36px;
+    padding: 6px 8px;
+    width: 100%;
+}
+
+.pvi-form__field--checkbox {
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.pvi-form__field--checkbox input {
+    min-height: auto;
+    width: auto;
+}
+
+.pvi-form__error {
+    color: #9f2f2f;
+    font-size: 0.78rem;
+    font-style: normal;
+    font-weight: 500;
+}
+
+.pvi-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 .pvi-table {
     margin-bottom: 0;
     white-space: nowrap;

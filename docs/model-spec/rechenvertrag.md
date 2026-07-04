@@ -98,3 +98,15 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 - Ohne `taxPaymentDelayMonths` wird `taxCashflow` in Monatsreihen im Dezember des `taxPaymentYear` gebucht. Bei gesetztem Monatsversatz wird der Cashflow-Monat aus Dezember plus `taxPaymentDelayMonths` abgeleitet.
 - `ScenarioResult::annualResults` bleibt als Kompatibilitaetsname erhalten und enthaelt dieselben aggregierten `YearResult`-Werte wie `ScenarioResult::yearlyResults`. `ScenarioResult::monthlyResults` enthaelt die zugrunde liegenden `MonthResult`-Zeilen.
 - `AnnualInvestorCashflowCalculator` bleibt separat testbar, ist aber kein Hauptpfad fuer `ScenarioCalculator`.
+
+## Formularvertrag
+
+- Das serverseitige Formular ist nicht persistent. Es erzeugt pro Request ein `ScenarioFormData`, validiert dieses mit `ScenarioFormValidator` und baut danach ueber `ScenarioFormMapper` ein `ScenarioInput`.
+- Formular-Geldwerte werden als Euro-Dezimalzahl eingegeben und an die Domain weitergegeben.
+- Formular-Prozentwerte werden als Prozentzahl `0..100` eingegeben und im Mapper in Domain-Dezimalraten `0..1` umgerechnet.
+- Formular-Monate werden als Kalendermonat `1..12` eingegeben.
+- Bei Profit-Sharing werden Betreiberanteile aktuell als `1 - investorShare` aus den Investor-Anteilen abgeleitet. Die Domain validiert weiterhin, dass Revenue-, Cost- und Capex-Shares jeweils 1 ergeben.
+- Die Maklercourtage hat im Formular den Default `capitalize`: sie erhoeht `capitalizableAncillaryCosts` und, wenn `brokerageIabEligible = 1`, auch `iabEligibleCapitalizableAncillaryCosts`. Sie wird dann nicht zugleich sofort abgezogen.
+- Bei Behandlung `immediate` wird Maklercourtage nur in `immediatelyDeductibleCosts` gemappt und nicht in die IAB-Basis aufgenommen.
+- Bei Behandlung `ignore` wird Maklercourtage weder aktiviert noch sofort abgezogen.
+- Anlagenleistung kWp, spezifischer Ertrag und Betriebskostensteigerung sind im aktuellen Formular Kontextfelder. Der produktive Rechenpfad nutzt den explizit eingegebenen PV-Jahreserloes und die laufenden PV-Betriebskosten.
