@@ -67,6 +67,13 @@ final class YearlyAggregationCalculator
             batteryDegradationFactor: $lastMonth->batteryDegradationFactor,
             batteryRevenueBeforeDegradation: $this->sum($months, static fn(MonthResult $month): float => $month->batteryRevenueBeforeDegradation),
             batteryRevenueAfterDegradation: $this->sum($months, static fn(MonthResult $month): float => $month->batteryRevenueAfterDegradation),
+            pvProductionKwh: $this->sum($months, static fn(MonthResult $month): float => $month->pvProductionKwh),
+            pvGrossRevenue: $this->sum($months, static fn(MonthResult $month): float => $month->pvGrossRevenue),
+            pvDirectMarketingCosts: $this->sum($months, static fn(MonthResult $month): float => $month->pvDirectMarketingCosts),
+            pvNetRevenue: $this->sum($months, static fn(MonthResult $month): float => $month->pvNetRevenue),
+            pvDegradationFactor: $lastMonth->pvDegradationFactor,
+            pvPriceFactor: $lastMonth->pvPriceFactor,
+            manualPvRevenueOverrideUsed: $this->any($months, static fn(MonthResult $month): bool => $month->manualPvRevenueOverrideUsed),
         );
     }
 
@@ -81,5 +88,19 @@ final class YearlyAggregationCalculator
         }
 
         return $sum;
+    }
+
+    /**
+     * @param list<MonthResult> $months
+     */
+    private function any(array $months, callable $accessor): bool
+    {
+        foreach($months as $month) {
+            if($accessor($month)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

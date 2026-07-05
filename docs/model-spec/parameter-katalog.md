@@ -133,7 +133,7 @@ Das serverseitige Eingabeformular nimmt Prozentwerte als Prozentzahl `0..100` en
 Aktuell editierbar und produktiv gemappt:
 
 - Projektdaten: Szenarioname, Startjahr, Laufzeit.
-- PV: expliziter PV-Jahreserloes und laufende PV-Betriebskosten.
+- PV: Anlagenleistung kWp, spezifischer Jahresertrag, PV-Degradation, Verfuegbarkeit, Abregelung/Verlust, Strompreis ct/kWh, Strompreissteigerung, Direktvermarktungskosten ct/kWh, weitere Erlosminderung, optionaler manueller PV-Jahreserloes-Override und laufende PV-Betriebskosten.
 - Batterie: Modell `none`, `full_ownership`, `profit_sharing`, Bruttoerloes, Market Access Fee, Optimizer Fee, OPEX, `sharing_base`, Investor Revenue Share, Investor Cost Share, Capex, Investor Capex Share, Capex-Zahlungsmonat, Degradation, Ersatzinvestition, Ersatzkosten und Investor Replacement Cost Share.
 - Finanzierung: Fremdkapitalbetrag, Zinssatz p.a. und jaehrliche Tilgung. Der Mapper bildet daraus `annualInterest = debtAmount * interestRate` und `annualRepayment`.
 - Steuer: Einkommensteuersatz, IAB aktiv/Satz, Sonder-AfA aktiv/Satz, AfA-Methode, lineare/degressive AfA-Saetze, Verlustnutzung und Steuerzahlungsversatz in Monaten.
@@ -143,6 +143,7 @@ Aktuell editierbar und produktiv gemappt:
 
 Aktuell im Formular sichtbar, aber noch nicht als eigene produktive Fachlogik verwendet:
 
-- Anlagenleistung kWp und spezifischer Jahresertrag: Kontextfelder; der Rechner nutzt weiterhin den expliziten PV-Jahreserloes.
 - Betriebskostensteigerung: validiert, aber noch nicht in eine Kostenzeitreihe ueberfuehrt.
 - Erwartete Sparplanrendite, Kostenquote und Kapitalertragsteuer sind noch nicht Teil des Formulars, weil der Sparplan-Prototyp diese Werte fachlich noch nicht berechnet.
+
+Der direkte PV-Jahreserloes ist kein Standardparameter mehr. `manualPvAnnualRevenueOverride` ersetzt den berechneten PV-Nettoerloes nur, wenn der Wert explizit gesetzt ist.

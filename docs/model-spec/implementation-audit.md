@@ -29,7 +29,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 
 ## Implementierte Parameter
 
-- PV: `annualRevenue`, `annualOperatingCosts`.
+- PV: `annualRevenue` als Legacy-/Override-Wert, `annualOperatingCosts`, `installedCapacityKwp`, `specificYieldKwhPerKwp`, `pvDegradationRatePerYear`, `pvAvailabilityRate`, `pvCurtailmentRate`, `electricityPriceCentsPerKwh`, `electricityPriceEscalationRatePerYear`, `directMarketingCostCentsPerKwh`, `otherRevenueDeductionRate`, `manualPvAnnualRevenueOverride`.
 - Batterie: Modell `none`, `full_ownership`, `profit_sharing`, `annualRevenue` als Batterie-Bruttoerloes, `annualOperatingCosts` als Batterie-Opex, `marketAccessFee`, `optimizerFee`, `batteryCapex`.
 - Revenue Sharing: `investorRevenueShare`, `operatorRevenueShare`, `investorCostShare`, `operatorCostShare`, `sharingBase` mit `gross_revenue`, `net_revenue`, `net_margin`, `investorCapexShare`, `operatorCapexShare`.
 - Finanzierung: `annualInterest`, `annualRepayment`.
@@ -38,7 +38,8 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Steuerliches Anlageverzeichnis: `assetName`, `acquisitionCost`, `capitalizableAncillaryCosts`, `acquisitionDate`, `depreciationStart`, `usefulLifeMonths`, `depreciationMethod`, `decliningBalanceRate`, `switchToLinear`, `iabReductionAmount`, `specialDepreciationEnabled`, `specialDepreciationTotalRate`, `specialDepreciationDistributionByYear`, `residualBookValue`.
 - Timing: `investmentYear/month`, `depreciationStartYear/month`, `eegCommissioningYear/month`, `gridConnectionYear/month`, `revenueStartYear/month`, `interestStartYear/month`, `repaymentStartYear/month`, `taxPaymentYear`, `savingsPlanContributionStartYear/month`, `annualSavingsPlanContributionMonth`.
 - Sparplan: `startingCapital`, `monthlyContribution`, `annualContribution`, `positiveCashflowReinvestmentRate`.
-- Monatsengine: `MonthResult` mit monatlichen PV-/Batterieerloesen, Kosten, Zins, Tilgung, AfA, Steuer-Cashflow, Investor-Cashflow, Sparplanbeitrag und Sparplan-Endwert.
+- PV-Ertrag: `PvRevenueCalculator` und `PvRevenueResult` berechnen Produktion, Bruttoerloes, Direktvermarktungskosten, Nettoerloes, Degradationsfaktor, Preisfaktor und Override-Markierung je Jahr.
+- Monatsengine: `MonthResult` mit monatlichen PV-Produktions-/Erloesdetails, Batterieerloesen, Kosten, Zins, Tilgung, AfA, Steuer-Cashflow, Investor-Cashflow, Sparplanbeitrag und Sparplan-Endwert.
 - Jahresaggregation: `YearResult` wird aus `MonthResult`-Zeilen aggregiert.
 - Szenario: `ScenarioCalculator` nutzt `MonthlyScenarioCalculator` und `YearlyAggregationCalculator` als Primaerpfad. `ScenarioResult` enthaelt Monatswerte und aggregierte Jahreswerte; `ScenarioComparison` summiert die Kennzahlen aus diesen Jahreswerten.
 - UI: `DemoScenarioFactory` erzeugt anonymisierte Demo-Szenarien; `GUI_PvInvestment` rendert Formular, Dashboard, Szenariovergleich, Jahreswerte und Monatswerte ohne eigene Rechenformeln.
@@ -47,12 +48,12 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 ## Fehlende Parameter aus dem Parameterkatalog
 
 - Szenario: Name, Gruppe, Betrachtungszeitraum, Waehrung, Inflation, Diskontierungszins.
-- PV: Anlagenname, Standort, kWp, spezifischer Ertrag, Degradation, Investitionskosten als getrenntes PV-Wirtschaftsgut, Wartung, Versicherung, Pacht, Direktvermarktungskosten, EEG-Verguetung, Marktwert Solar, Strompreisannahme.
+- PV: Anlagenname, Standort, saisonales Produktionsprofil, PV-Investitionskosten als getrenntes PV-Wirtschaftsgut, Wartung, Versicherung, Pacht, EEG-Verguetung, Marktwert Solar als eigene Preislogik.
 - Batterie: `custom`, nutzbare Kapazitaet als eigene Zeitreihe, Batterie-Capex-Fortschreibung mit mehreren Ersatzereignissen.
 - Finanzierung: Darlehensbetrag, Auszahlung, Zinssatz, Tilgungssatz, Annuitaet, Zinsbindung, Laufzeit, Sondertilgung, tilgungsfreie Monate, Finanzierungsnebenkosten.
 - Steuer: Ruhestandssaetze als eigene Phase, steuerliche Rueckgaengigmachung des IAB, manueller Wechsel von degressiv zu linear mit Wechseljahr, asset-spezifische Zinsabzugs-Konfiguration, detaillierte gesetzliche Grenzen fuer Verlustvortrag/-ruecktrag.
 - Sparplan: erwartete Rendite, Kostenquote, Kapitalertragsteuer, Teilfreistellung, Sparer-Pauschbetrag, Entnahmephase.
-- UI/Formular: freie Betreiberanteile, taxRateByYear-Editor, mehrere Batterieersatzereignisse, mehrere Cost Components und produktive PV-Ertragsrechnung aus kWp/spezifischem Ertrag.
+- UI/Formular: freie Betreiberanteile, taxRateByYear-Editor, mehrere Batterieersatzereignisse und mehrere Cost Components.
 - Ergebnisse: Restschuldverlauf, Buchwerte ueber mehrere Jahre als Scenario-Ausgabe, NPV/IRR.
 
 ## Fachliche Bewertung
@@ -67,6 +68,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Profit-Sharing unterstuetzt explizit `gross_revenue`, `net_revenue` und `net_margin`. Bei `net_margin` werden Market Access Fee, Optimizer Fee und Batterie-Opex nicht nochmals als Kosten abgezogen.
 - Negative Nettomargen werden proportional verteilt und nicht automatisch auf 0 gekappt.
 - Batterie-Capex wird nach Capex-Shares als Investor-/Betreiberanteil ausgewiesen und im Monatsengine-Pfad im Zahlungsmonat als Investor-Cashflow abgezogen. Ersatzinvestitionen werden separat als `batteryReplacementCapexInvestor` gebucht. Steuerlich werden sie nicht automatisch als Sofortaufwand behandelt; ein eigenes `TaxAsset` ist dafuer explizit anzulegen.
+- PV-Erloese werden im Monatsengine-Pfad standardmaessig aus technischen und preislichen Annahmen berechnet. Der fruehere direkte Jahreserloes bleibt nur als optionaler Override bzw. Legacy-Kompatibilitaet erhalten.
 - Sparplan-Startkapital ist frei setzbar. Rendite, Steuern und Kosten des Sparplans fehlen noch.
 - Steuerzahlungsjahr und Steuerentstehungsjahr sind getrennt: `taxAmount` entsteht im Rechenjahr, die Monatsengine bucht den `taxCashflow` im berechneten Zahlungsmonat. Der Legacy-Jahresrechner weist `cashflowTaxPayment` nur aus, wenn `taxPaymentYear === calculationYear`.
 - Steuerliche Verlustnutzung ist parametrisierbar ueber `immediate`, `carry_forward`, `carry_back`, `manual` und `none`. `TaxLossLedger` haelt Verlustvortraege und Vorjahresgewinn-Kapazitaeten fuer mehrjaehrige Rechnungen.
@@ -75,7 +77,7 @@ Stand: aktueller Domain-Prototyp ohne GUI und ohne Datenbank.
 - Die erste POOL-GUI ist nicht persistent. Sie verwendet nur anonymisierte Demo-Szenarien und ein serverseitiges Formular. Nach gueltigem POST berechnet sie ein `ScenarioInput` aus FormData/Validator/Mapper mit `ScenarioCalculator`.
 - Maklercourtage wird im Formular standardmaessig als aktivierungspflichtige, IAB-beguenstigte Anschaffungsnebenkosten gemappt. Die Alternativen `sofort abzugsfaehig` und `nicht beruecksichtigen` sind explizit parametriert und getestet.
 - Formular-Prozentwerte werden als Prozentzahl `0..100` validiert und im Mapper in Domain-Raten `0..1` uebersetzt.
-- kWp, spezifischer Ertrag und Betriebskostensteigerung sind im Formular noch Kontextfelder. Die produktive Berechnung nutzt den explizit eingegebenen PV-Jahreserloes.
+- kWp, spezifischer Ertrag, Strompreis, Direktvermarktungskosten, PV-Degradation, Verfuegbarkeit und Abregelung werden im Formular produktiv gemappt. Betriebskostensteigerung bleibt noch ein validiertes Kontextfeld.
 
 ## Technische Bewertung
 

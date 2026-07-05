@@ -23,6 +23,8 @@ final class ScenarioFormTest extends TestCase
         self::assertInstanceOf(ScenarioInput::class, $scenario);
         self::assertSame('Demo Batterie Vollerwerb', $scenario->description);
         self::assertCount(60, $result->monthlyResults);
+        self::assertNull($scenario->pvAssumptions->manualPvAnnualRevenueOverride);
+        self::assertSame(24000.0, $result->yearlyResults[1]->pvRevenue);
         self::assertGreaterThan(0.0, $result->cumulativeInvestorBatteryRevenue);
     }
 
@@ -129,6 +131,17 @@ final class ScenarioFormTest extends TestCase
         self::assertSame(12345.67, $scenario->savingsPlanAssumptions->startingCapital);
     }
 
+    public function testManualPvAnnualRevenueOverrideIsTakenFromForm(): void
+    {
+        $scenario = $this->map([
+            'manualPvAnnualRevenueOverride' => '12345.67',
+        ]);
+        $result = (new ScenarioCalculator())->calculate($scenario);
+
+        self::assertSame(12345.67, $scenario->pvAssumptions->manualPvAnnualRevenueOverride);
+        self::assertTrue($result->yearlyResults[0]->manualPvRevenueOverrideUsed);
+    }
+
     public function testInvalidPercentCreatesValidationError(): void
     {
         $errors = $this->validate([
@@ -136,6 +149,33 @@ final class ScenarioFormTest extends TestCase
         ]);
 
         self::assertArrayHasKey('investorRevenueSharePercent', $errors);
+    }
+
+    public function testNegativePvCapacityCreatesValidationError(): void
+    {
+        $errors = $this->validate([
+            'pvCapacityKwp' => '-1',
+        ]);
+
+        self::assertArrayHasKey('pvCapacityKwp', $errors);
+    }
+
+    public function testNegativeElectricityPriceCreatesValidationError(): void
+    {
+        $errors = $this->validate([
+            'electricityPriceCentsPerKwh' => '-1',
+        ]);
+
+        self::assertArrayHasKey('electricityPriceCentsPerKwh', $errors);
+    }
+
+    public function testInvalidPvAvailabilityCreatesValidationError(): void
+    {
+        $errors = $this->validate([
+            'pvAvailabilityPercent' => '101',
+        ]);
+
+        self::assertArrayHasKey('pvAvailabilityPercent', $errors);
     }
 
     public function testInvalidMonthCreatesValidationError(): void

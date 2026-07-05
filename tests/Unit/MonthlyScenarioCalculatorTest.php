@@ -36,6 +36,29 @@ final class MonthlyScenarioCalculatorTest extends TestCase
         self::assertSame(2000.0, $this->sum($months, 'pvRevenue'));
     }
 
+    public function testCalculatedPvRevenueStartsInNovemberWithTwoTwelfthsInStartYear(): void
+    {
+        $months = $this->calculator()->calculate($this->scenario(
+            pvAssumptions: new PvAssumptions(
+                installedCapacityKwp: 100.0,
+                specificYieldKwhPerKwp: 1000.0,
+                electricityPriceCentsPerKwh: 10.0,
+                directMarketingCostCentsPerKwh: 1.0,
+            ),
+            timingAssumptions: new ProjectTimingAssumptions(
+                calculationYear: 2026,
+                revenueStartYear: 2026,
+                revenueStartMonth: 11,
+            ),
+        ));
+
+        self::assertSame(0.0, $months[9]->pvRevenue);
+        self::assertSame(750.0, $months[10]->pvRevenue);
+        self::assertSame(1500.0, $this->sum($months, 'pvRevenue'));
+        self::assertEqualsWithDelta(16666.666666, $this->sum($months, 'pvProductionKwh'), 0.000001);
+        self::assertSame(1500.0, $this->sum($months, 'pvNetRevenue'));
+    }
+
     public function testDepreciationStartInSeptemberCreatesFourDepreciationMonthsInStartYear(): void
     {
         $months = $this->calculator()->calculate($this->scenario(

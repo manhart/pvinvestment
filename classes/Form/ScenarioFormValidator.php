@@ -27,7 +27,8 @@ final class ScenarioFormValidator
         foreach([
             'pvCapacityKwp' => 'Anlagenleistung',
             'pvSpecificYieldKwhPerKwp' => 'Spezifischer Jahresertrag',
-            'pvAnnualRevenue' => 'PV-Erloes pro Jahr',
+            'electricityPriceCentsPerKwh' => 'Strompreis',
+            'directMarketingCostCentsPerKwh' => 'Direktvermarktungskosten',
             'pvOperatingCosts' => 'PV-Betriebskosten',
             'batteryGrossRevenue' => 'Batterie-Bruttoerloes',
             'marketAccessFee' => 'Market Access Fee',
@@ -45,8 +46,14 @@ final class ScenarioFormValidator
         ] as $field => $label) {
             $this->validateNonNegativeNumber($data, $errors, $field, $label);
         }
+        $this->validateOptionalNonNegativeNumber($data, $errors, 'manualPvAnnualRevenueOverride', 'Manueller PV-Erloes pro Jahr');
 
         foreach([
+            'pvDegradationPercent' => 'PV-Degradation',
+            'pvAvailabilityPercent' => 'PV-Verfuegbarkeit',
+            'pvCurtailmentPercent' => 'PV-Abregelung/Verlust',
+            'electricityPriceEscalationPercent' => 'Strompreissteigerung',
+            'otherRevenueDeductionPercent' => 'Weitere Erlosminderung',
             'pvOperatingCostEscalationPercent' => 'Betriebskostensteigerung',
             'investorRevenueSharePercent' => 'Investor Revenue Share',
             'investorCostSharePercent' => 'Investor Cost Share',
@@ -141,6 +148,17 @@ final class ScenarioFormValidator
         if($data->float($field) < 0.0) {
             $errors[$field] = $label.' darf nicht negativ sein.';
         }
+    }
+
+    /**
+     * @param array<string, string> $errors
+     */
+    private function validateOptionalNonNegativeNumber(ScenarioFormData $data, array &$errors, string $field, string $label): void
+    {
+        if($data->string($field) === '') {
+            return;
+        }
+        $this->validateNonNegativeNumber($data, $errors, $field, $label);
     }
 
     /**

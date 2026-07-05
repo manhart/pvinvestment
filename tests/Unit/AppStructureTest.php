@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace pvinvestment\tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use pvinvestment\classes\Calculators\PvRevenueCalculator;
+use pvinvestment\classes\Domain\PvRevenueResult;
 use pvinvestment\classes\PvInvestmentApp;
 use pvinvestment\classes\Form\ScenarioFormData;
 use pvinvestment\classes\Form\ScenarioFormMapper;
@@ -20,6 +22,8 @@ final class AppStructureTest extends TestCase
         self::assertTrue(class_exists(GUI_Frame::class));
         self::assertTrue(class_exists(GUI_Calculator::class));
         self::assertTrue(class_exists(GUI_PvInvestment::class));
+        self::assertTrue(class_exists(PvRevenueCalculator::class));
+        self::assertTrue(class_exists(PvRevenueResult::class));
         self::assertTrue(class_exists(ScenarioFormData::class));
         self::assertTrue(class_exists(ScenarioFormValidator::class));
         self::assertTrue(class_exists(ScenarioFormMapper::class));

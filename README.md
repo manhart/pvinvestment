@@ -17,6 +17,7 @@ Diese Version enthaelt eine POOL-kompatible Anwendungsstruktur, einen getesteten
 Implementiert sind:
 
 - PV- und Batterieannahmen als Domain-Objekte.
+- PV-Ertrags- und Erloesmodell aus Anlagenleistung, spezifischem Ertrag, Degradation, Verfuegbarkeit, Abregelung, Strompreis und Direktvermarktungskosten.
 - Batteriemodelle fuer keine Batterie, Vollerwerb und Profit-Sharing.
 - Explizite Batterie-Sharing-Basen `gross_revenue`, `net_revenue` und `net_margin`.
 - Ein steuerliches Anlageverzeichnis mit mehrjaehriger AfA-Fortschreibung.
@@ -30,7 +31,7 @@ Implementiert sind:
 Noch nicht enthalten:
 
 - Speicherung oder Verwaltung produktiver Szenarien
-- vollstaendige PV-Ertragsmodellierung mit saisonalen Profilen
+- saisonale PV-Produktionsprofile
 - gesetzliche Steuerberatung oder automatische steuerliche Einzelfallbewertung
 
 ## POOL-Konventionen fuer diese Anwendung
@@ -78,7 +79,7 @@ Zusätzlich gibt es ein serverseitiges POST-Formular. Der Datenfluss ist:
 
 Die GUI liegt unter `guis/GUI_PvInvestment/` und ruft nur die Form-Klassen, die Factory sowie `ScenarioCalculator` auf. Es gibt keine Persistenz, keine Datenbank und keine echten Angebots- oder Investorendaten in den Demo-Szenarien.
 
-Das Formular bildet bereits PV-Jahreserloes, Betriebskosten, Batteriemodell, Sharing Base, Capex, Degradation, Ersatzinvestition, Finanzierung, Steuerparameter, Maklercourtage-Behandlung, Timing und Sparplan-Startwerte ab. Anlagenleistung kWp, spezifischer Ertrag und Betriebskostensteigerung werden im Formular als Eingabekontext gefuehrt; der aktuelle Domain-Prototyp berechnet PV-Erloese noch aus dem expliziten Jahreserloes.
+Das Formular bildet bereits Anlagenleistung kWp, spezifischen Jahresertrag, Strompreis, Direktvermarktungskosten, PV-Degradation, Verfuegbarkeit, Abregelung, Betriebskosten, Batteriemodell, Sharing Base, Capex, Degradation, Ersatzinvestition, Finanzierung, Steuerparameter, Maklercourtage-Behandlung, Timing und Sparplan-Startwerte ab. Der fruehere direkte PV-Jahreserloes ist nur noch ein optionaler Experten-Override.
 
 ## Dokumentation
 

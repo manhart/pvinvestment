@@ -60,6 +60,21 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 - `taxRateByYear` ueberschreibt den allgemeinen `incomeTaxRate` fuer einzelne Steuerjahre.
 - Zinsen werden steuerlich aus derselben `FinancingAssumptions` und demselben Zins-Monatsfaktor abgeleitet wie im Cashflow.
 
+## PV-Ertragsvertrag
+
+- `PvAssumptions` enthaelt technische und preisliche PV-Annahmen: `installedCapacityKwp`, `specificYieldKwhPerKwp`, `pvDegradationRatePerYear`, `pvAvailabilityRate`, `pvCurtailmentRate`, `electricityPriceCentsPerKwh`, `electricityPriceEscalationRatePerYear`, `directMarketingCostCentsPerKwh`, `otherRevenueDeductionRate`.
+- `PvRevenueCalculator` berechnet je Kalenderjahr:
+  - `yearIndex = jahr - ertragsstartjahr`
+  - `degradationFactor = (1 - pvDegradationRatePerYear) ^ max(0, yearIndex)`
+  - `priceFactor = (1 + electricityPriceEscalationRatePerYear) ^ max(0, yearIndex)`
+  - `annualProductionKwh = installedCapacityKwp * specificYieldKwhPerKwp * degradationFactor * pvAvailabilityRate * (1 - pvCurtailmentRate)`
+  - `grossRevenue = annualProductionKwh * electricityPriceCentsPerKwh / 100 * priceFactor`
+  - `directMarketingCosts = annualProductionKwh * directMarketingCostCentsPerKwh / 100`
+  - `netRevenue = (grossRevenue - directMarketingCosts) * (1 - otherRevenueDeductionRate)`
+- `manualPvAnnualRevenueOverride` ersetzt nur den berechneten PV-Nettoerloes. Produktionsmenge, Bruttoerloes, Direktvermarktungskosten, Degradationsfaktor und Preisfaktor bleiben sichtbar. `manualPvRevenueOverrideUsed` markiert Monats- und Jahresergebnisse mit aktivem Override.
+- `annualRevenue` bleibt aus Kompatibilitaetsgruenden fuer bestehende Tests und Legacy-Pfade erhalten. Wenn keine technischen PV-Parameter gesetzt sind, behandelt `PvRevenueCalculator` diesen Wert als Legacy-Override.
+- Monatswerte buchen PV-Produktion und PV-Erloese nur ab `revenueStartYear/month`. Das Startjahr wird dadurch automatisch anteilig, zum Beispiel November/Dezember mit 2/12, erfasst.
+
 ## Batterie- und Sharing-Vertrag
 
 - `full_ownership`: Investor erhaelt 100 Prozent Batterieerloes und traegt 100 Prozent Batteriekosten.
@@ -109,4 +124,5 @@ Dieses Dokument beschreibt die aktuell implementierten Einheiten, Vorzeichen und
 - Die Maklercourtage hat im Formular den Default `capitalize`: sie erhoeht `capitalizableAncillaryCosts` und, wenn `brokerageIabEligible = 1`, auch `iabEligibleCapitalizableAncillaryCosts`. Sie wird dann nicht zugleich sofort abgezogen.
 - Bei Behandlung `immediate` wird Maklercourtage nur in `immediatelyDeductibleCosts` gemappt und nicht in die IAB-Basis aufgenommen.
 - Bei Behandlung `ignore` wird Maklercourtage weder aktiviert noch sofort abgezogen.
-- Anlagenleistung kWp, spezifischer Ertrag und Betriebskostensteigerung sind im aktuellen Formular Kontextfelder. Der produktive Rechenpfad nutzt den explizit eingegebenen PV-Jahreserloes und die laufenden PV-Betriebskosten.
+- Das Formular mappt technische und preisliche PV-Annahmen produktiv. Der manuelle PV-Jahreserloes ist nur noch ein optionaler Experten-Override.
+- Betriebskostensteigerung ist im Formular weiter ein validiertes Kontextfeld, aber noch nicht in eine Kostenzeitreihe ueberfuehrt.

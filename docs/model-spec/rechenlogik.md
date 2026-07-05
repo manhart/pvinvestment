@@ -27,6 +27,9 @@ Der Domain-Prototyp fuehrt diese Zeitpunkte in `ProjectTimingAssumptions` getren
 Aktuelle Regeln:
 
 - PV- und Batterieerloese fallen erst ab `revenueStartYear/month` an.
+- PV-Erloese werden standardmaessig mit `PvRevenueCalculator` aus Anlagenleistung, spezifischem Ertrag, PV-Degradation, Verfuegbarkeit, Abregelung, Strompreis, Preissteigerung und Direktvermarktungskosten berechnet.
+- Der berechnete PV-Jahreswert wird in der Monatsengine gleichmaessig auf 12 Monate verteilt und nur ab Ertragsbeginn gebucht. Bei Ertragsbeginn November fallen im Startjahr 2/12 des Jahreswertes an.
+- Wenn `manualPvAnnualRevenueOverride` gesetzt ist, ersetzt dieser Wert den berechneten PV-Nettoerloes. Produktionsmenge, Bruttoerloes, Direktvermarktungskosten, Degradationsfaktor und Preisfaktor werden weiterhin transparent ausgewiesen.
 - Laufende PV-Kosten und Batterie-Investor-Kosten fallen im Prototyp ebenfalls ab Ertragsbeginn an.
 - Batterie-Capex wird im konfigurierten `capexPaymentYear/month` gebucht; ohne eigene Angabe gilt der Investitionsmonat.
 - Batterie-Ersatzinvestitionen werden als separater Investor-Capex im konfigurierten Ersatzmonat gebucht.
@@ -48,7 +51,7 @@ Der alte `AnnualInvestorCashflowCalculator` bleibt als separat testbarer Legacy-
 
 ## PV-Produktion
 
-Berechnet erwartete Produktion aus Anlagenleistung, spezifischem Ertrag, saisonaler Verteilung und Degradation.
+Berechnet erwartete Jahresproduktion aus Anlagenleistung, spezifischem Ertrag, Degradation, Verfuegbarkeit und Abregelung/Verlust. Der aktuelle Prototyp verwendet eine gleichmaessige Monatsverteilung; saisonale Profile sind noch nicht modelliert.
 
 ## Batterieerloese
 
@@ -88,11 +91,10 @@ Die erste POOL-GUI kombiniert Demo-Dashboard und serverseitiges Eingabeformular.
 
 Die GUI rendert Kennzahlen, Szenariovergleich, Jahreswerte und optionale Monatswerte. Es gibt in diesem UI-Pfad keine Persistenz, keine Datenbank und keine produktiven Angebots- oder Investorendaten.
 
-Der aktuelle Domain-Prototyp kennt noch keine vollstaendige PV-Produktionsrechnung aus kWp, spezifischem Ertrag, saisonaler Verteilung und Strompreisen. Das Formular fuehrt kWp und spezifischen Ertrag deshalb als Kontextfelder, nutzt fuer die Berechnung aber den explizit eingegebenen PV-Jahreserloes.
+Der UI-Pfad nutzt dieselbe PV-Ertragsrechnung wie die Domain. Der manuelle PV-Jahreserloes bleibt als Experten-Override verfuegbar und wird in den Jahresergebnissen als aktiv markiert.
 
 ## Nicht-Ziele der Initialstruktur
 
-- keine produktive Berechnung
 - keine Excel-Auswertung als Laufzeit-Engine
 - keine steuerliche Beratung
 - keine Persistenzentscheidung

@@ -29,10 +29,17 @@ final class MonthResult
         public readonly float $batteryDegradationFactor = 1.0,
         public readonly float $batteryRevenueBeforeDegradation = 0.0,
         public readonly float $batteryRevenueAfterDegradation = 0.0,
+        public readonly float $pvProductionKwh = 0.0,
+        public readonly float $pvGrossRevenue = 0.0,
+        public readonly float $pvDirectMarketingCosts = 0.0,
+        public readonly float $pvNetRevenue = 0.0,
+        public readonly float $pvDegradationFactor = 1.0,
+        public readonly float $pvPriceFactor = 1.0,
+        public readonly bool $manualPvRevenueOverrideUsed = false,
     ) {}
 
     /**
-     * @return array<string, float|int>
+     * @return array<string, float|int|bool>
      */
     public function toArray(): array
     {
@@ -60,6 +67,13 @@ final class MonthResult
             'batteryDegradationFactor' => $this->batteryDegradationFactor,
             'batteryRevenueBeforeDegradation' => $this->batteryRevenueBeforeDegradation,
             'batteryRevenueAfterDegradation' => $this->batteryRevenueAfterDegradation,
+            'pvProductionKwh' => $this->pvProductionKwh,
+            'pvGrossRevenue' => $this->pvGrossRevenue,
+            'pvDirectMarketingCosts' => $this->pvDirectMarketingCosts,
+            'pvNetRevenue' => $this->pvNetRevenue,
+            'pvDegradationFactor' => $this->pvDegradationFactor,
+            'pvPriceFactor' => $this->pvPriceFactor,
+            'manualPvRevenueOverrideUsed' => $this->manualPvRevenueOverrideUsed,
         ];
     }
 }

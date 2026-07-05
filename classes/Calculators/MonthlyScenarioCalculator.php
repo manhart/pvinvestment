@@ -5,6 +5,7 @@ namespace pvinvestment\classes\Calculators;
 
 use pvinvestment\classes\Domain\BatteryModel;
 use pvinvestment\classes\Domain\ProjectTimingAssumptions;
+use pvinvestment\classes\Domain\PvAssumptions;
 use pvinvestment\classes\Domain\Results\MonthResult;
 use pvinvestment\classes\Domain\Scenario\ScenarioInput;
 use pvinvestment\classes\Domain\TaxAssumptions;
@@ -15,6 +16,7 @@ final class MonthlyScenarioCalculator
 {
     public function __construct(
         private readonly TaxCalculator $taxCalculator = new TaxCalculator(),
+        private readonly PvRevenueCalculator $pvRevenueCalculator = new PvRevenueCalculator(),
     ) {}
 
     /**
@@ -37,13 +39,21 @@ final class MonthlyScenarioCalculator
         $savingsValue = $scenario->savingsPlanAssumptions->startingCapital;
         for($year = $baseYear; $year <= $endYear; $year++) {
             $batteryAllocation = $scenario->batteryModel->annualAllocationForYear($year, $sourceTiming->revenueStartYear);
+            $pvRevenue = $this->pvRevenueCalculator->calculateForYear(
+                assumptions: $scenario->pvAssumptions,
+                year: $year,
+                revenueStartYear: $sourceTiming->revenueStartYear,
+            );
             for($month = 1; $month <= 12; $month++) {
                 $current = new YearMonth($year, $month);
                 $hasRevenue = $current->isOnOrAfter($revenueStart);
                 $hasInterest = $current->isOnOrAfter($interestStart);
                 $hasRepayment = $current->isOnOrAfter($repaymentStart);
 
-                $pvRevenue = $hasRevenue ? $scenario->pvAssumptions->annualRevenue / 12.0 : 0.0;
+                $monthlyPvRevenue = $hasRevenue ? $pvRevenue->netRevenue / 12.0 : 0.0;
+                $monthlyPvProductionKwh = $hasRevenue ? $pvRevenue->annualProductionKwh / 12.0 : 0.0;
+                $monthlyPvGrossRevenue = $hasRevenue ? $pvRevenue->grossRevenue / 12.0 : 0.0;
+                $monthlyPvDirectMarketingCosts = $hasRevenue ? $pvRevenue->directMarketingCosts / 12.0 : 0.0;
                 $operatingCosts = $hasRevenue ? $scenario->pvAssumptions->annualOperatingCosts / 12.0 : 0.0;
                 $batteryGrossRevenue = $hasRevenue ? $batteryAllocation['grossRevenue'] / 12.0 : 0.0;
                 $batteryInvestorRevenue = $hasRevenue ? $batteryAllocation['investorRevenue'] / 12.0 : 0.0;
@@ -56,13 +66,13 @@ final class MonthlyScenarioCalculator
                 $financingPrincipal = $hasRepayment ? $scenario->financingAssumptions->annualRepayment / 12.0 : 0.0;
                 $depreciation = $depreciationByMonth[$this->monthKey($year, $month)] ?? 0.0;
                 $taxCashflow = $taxByPaymentMonth[$this->monthKey($year, $month)] ?? 0.0;
-                $taxableResultComponent = $pvRevenue
+                $taxableResultComponent = $monthlyPvRevenue
                     + $batteryInvestorRevenue
                     - $batteryInvestorCosts
                     - $operatingCosts
                     - $financingInterest
                     - $depreciation;
-                $investorCashflowBeforeSavings = $pvRevenue
+                $investorCashflowBeforeSavings = $monthlyPvRevenue
                     + $batteryInvestorRevenue
                     - $batteryInvestorCosts
                     - $operatingCosts
@@ -80,7 +90,7 @@ final class MonthlyScenarioCalculator
                 $months[] = new MonthResult(
                     year: $year,
                     month: $month,
-                    pvRevenue: $pvRevenue,
+                    pvRevenue: $monthlyPvRevenue,
                     batteryGrossRevenue: $batteryGrossRevenue,
                     batteryInvestorRevenue: $batteryInvestorRevenue,
                     batteryInvestorCosts: $batteryInvestorCosts,
@@ -101,6 +111,13 @@ final class MonthlyScenarioCalculator
                     batteryDegradationFactor: $batteryAllocation['degradationFactor'],
                     batteryRevenueBeforeDegradation: $batteryRevenueBeforeDegradation,
                     batteryRevenueAfterDegradation: $batteryRevenueAfterDegradation,
+                    pvProductionKwh: $monthlyPvProductionKwh,
+                    pvGrossRevenue: $monthlyPvGrossRevenue,
+                    pvDirectMarketingCosts: $monthlyPvDirectMarketingCosts,
+                    pvNetRevenue: $monthlyPvRevenue,
+                    pvDegradationFactor: $pvRevenue->degradationFactor,
+                    pvPriceFactor: $pvRevenue->priceFactor,
+                    manualPvRevenueOverrideUsed: $pvRevenue->manualOverrideUsed,
                 );
             }
         }
@@ -120,7 +137,7 @@ final class MonthlyScenarioCalculator
             $timingAssumptions = $this->timingAssumptionsForYear($scenario, $sourceTiming, $year);
             $taxCalculation = $this->taxCalculator->calculate(
                 taxAssumptions: $taxAssumptions,
-                pvAssumptions: $scenario->pvAssumptions,
+                pvAssumptions: $this->pvAssumptionsForYear($scenario, $sourceTiming, $year),
                 batteryModel: $this->batteryModelForYear($scenario, $sourceTiming, $year),
                 financingAssumptions: $scenario->financingAssumptions,
                 timingAssumptions: $timingAssumptions,
@@ -147,7 +164,7 @@ final class MonthlyScenarioCalculator
             $timingAssumptions = $this->timingAssumptionsForYear($scenario, $sourceTiming, $year);
             $taxCalculation = $this->taxCalculator->calculate(
                 taxAssumptions: $taxAssumptions,
-                pvAssumptions: $scenario->pvAssumptions,
+                pvAssumptions: $this->pvAssumptionsForYear($scenario, $sourceTiming, $year),
                 batteryModel: $this->batteryModelForYear($scenario, $sourceTiming, $year),
                 financingAssumptions: $scenario->financingAssumptions,
                 timingAssumptions: $timingAssumptions,
@@ -227,6 +244,17 @@ final class MonthlyScenarioCalculator
         $batteryAllocation = $scenario->batteryModel->annualAllocationForYear($year, $sourceTiming->revenueStartYear);
 
         return $scenario->batteryModel->withAnnualRevenue($batteryAllocation['revenueAfterDegradation']);
+    }
+
+    private function pvAssumptionsForYear(ScenarioInput $scenario, ProjectTimingAssumptions $sourceTiming, int $year): PvAssumptions
+    {
+        $pvRevenue = $this->pvRevenueCalculator->calculateForYear(
+            assumptions: $scenario->pvAssumptions,
+            year: $year,
+            revenueStartYear: $sourceTiming->revenueStartYear,
+        );
+
+        return $scenario->pvAssumptions->withAnnualRevenue($pvRevenue->netRevenue);
     }
 
     private function activeMonthsInYear(int $calculationYear, int $startYear, int $startMonth): int

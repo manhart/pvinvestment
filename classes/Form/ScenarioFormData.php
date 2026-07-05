@@ -53,6 +53,16 @@ final class ScenarioFormData
         return (float)str_replace(',', '.', $this->string($key));
     }
 
+    public function nullableFloat(string $key): ?float
+    {
+        $value = $this->string($key);
+        if($value === '') {
+            return null;
+        }
+
+        return (float)str_replace(',', '.', $value);
+    }
+
     public function int(string $key): int
     {
         return (int)$this->float($key);

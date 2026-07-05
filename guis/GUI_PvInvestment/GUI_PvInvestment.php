@@ -77,10 +77,19 @@ final class GUI_PvInvestment extends GUI_Module
         .$this->renderFieldset('PV-Anlage', [
             $this->renderInput($data, $errors, 'pvCapacityKwp', 'Anlagenleistung kWp', 'number', '0.01'),
             $this->renderInput($data, $errors, 'pvSpecificYieldKwhPerKwp', 'Spezifischer Jahresertrag kWh/kWp', 'number', '0.01'),
-            $this->renderInput($data, $errors, 'pvAnnualRevenue', 'PV-Erloes pro Jahr', 'number', '0.01'),
+            $this->renderInput($data, $errors, 'electricityPriceCentsPerKwh', 'Strompreis ct/kWh', 'number', '0.0001'),
+            $this->renderInput($data, $errors, 'directMarketingCostCentsPerKwh', 'Direktvermarktungskosten ct/kWh', 'number', '0.0001'),
+            $this->renderInput($data, $errors, 'pvDegradationPercent', 'PV-Degradation p.a. %', 'number', '0.01'),
+            $this->renderInput($data, $errors, 'pvAvailabilityPercent', 'Verfuegbarkeit %', 'number', '0.01'),
+            $this->renderInput($data, $errors, 'pvCurtailmentPercent', 'Abregelung/Verlust %', 'number', '0.01'),
+            $this->renderInput($data, $errors, 'electricityPriceEscalationPercent', 'Preissteigerung p.a. %', 'number', '0.01'),
             $this->renderInput($data, $errors, 'pvOperatingCosts', 'Laufende Betriebskosten', 'number', '0.01'),
             $this->renderInput($data, $errors, 'pvOperatingCostEscalationPercent', 'Betriebskostensteigerung %', 'number', '0.01'),
-        ], 'Aktuell verwendet das Domain-Modell den eingegebenen PV-Jahreserloes direkt; kWp, spezifischer Ertrag und Kostensteigerung bleiben Eingabekontext.')
+            $this->renderInput($data, $errors, 'otherRevenueDeductionPercent', 'Weitere Erlosminderung %', 'number', '0.01'),
+        ])
+        .$this->renderFieldset('PV-Expertenwerte', [
+            $this->renderInput($data, $errors, 'manualPvAnnualRevenueOverride', 'Manueller PV-Erloes pro Jahr (Override)', 'number', '0.01'),
+        ], 'Leer lassen, damit PV-Erloese aus Produktion, Strompreis und Direktvermarktungskosten berechnet werden.')
         .$this->renderFieldset('Batterie', [
             $this->renderSelect($data, $errors, 'batteryModel', 'Batteriemodell', [
                 'none' => 'keine Batterie',
@@ -269,6 +278,9 @@ final class GUI_PvInvestment extends GUI_Module
             + $this->sumYearResults($result->yearlyResults, 'batteryReplacementCapexInvestor');
 
         $cards = [
+            ['PV-Produktion', $this->formatNumber($result->yearlyResults[0]->pvProductionKwh ?? 0.0, 0).' kWh', $result->yearlyResults[0]->pvProductionKwh ?? 0.0],
+            ['PV-Nettoerloes Jahr 1', $this->formatEuro($result->yearlyResults[0]->pvNetRevenue ?? 0.0), $result->yearlyResults[0]->pvNetRevenue ?? 0.0],
+            ['PV-Override', ($result->yearlyResults[0]->manualPvRevenueOverrideUsed ?? false) ? 'aktiv' : 'aus', ($result->yearlyResults[0]->manualPvRevenueOverrideUsed ?? false) ? -1.0 : 1.0],
             ['Kumulierter Investor-Cashflow', $this->formatEuro($result->cumulativeInvestorCashflow), $result->cumulativeInvestorCashflow],
             ['Kumulierter Steuer-Cashflow', $this->formatEuro($result->cumulativeTaxCashflow), $result->cumulativeTaxCashflow],
             ['Kumulierte Batterieerloese Investor', $this->formatEuro($result->cumulativeInvestorBatteryRevenue), $result->cumulativeInvestorBatteryRevenue],
@@ -327,7 +339,13 @@ final class GUI_PvInvestment extends GUI_Module
 
             $html .= '<tr>';
             $html .= '<th scope="row">'.(string)$yearResult->year.'</th>';
+            $html .= '<td>'.$this->formatNumber($yearResult->pvProductionKwh, 0).'</td>';
+            $html .= '<td>'.$this->formatEuro($yearResult->pvGrossRevenue).'</td>';
+            $html .= '<td>'.$this->formatEuro($yearResult->pvDirectMarketingCosts).'</td>';
             $html .= '<td>'.$this->formatEuro($yearResult->pvRevenue).'</td>';
+            $html .= '<td>'.$this->formatNumber($yearResult->pvDegradationFactor, 4).'</td>';
+            $html .= '<td>'.$this->formatNumber($yearResult->pvPriceFactor, 4).'</td>';
+            $html .= '<td>'.($yearResult->manualPvRevenueOverrideUsed ? 'ja' : 'nein').'</td>';
             $html .= '<td>'.$this->formatEuro($yearResult->batteryInvestorRevenue).'</td>';
             $html .= '<td>'.$this->formatEuro($yearResult->batteryInvestorCosts).'</td>';
             $html .= '<td>'.$this->formatEuro($yearResult->batteryCapexInvestor).'</td>';
@@ -350,6 +368,9 @@ final class GUI_PvInvestment extends GUI_Module
         foreach($result->monthlyResults as $monthResult) {
             $html .= '<tr>';
             $html .= '<th scope="row">'.sprintf('%04d-%02d', $monthResult->year, $monthResult->month).'</th>';
+            $html .= '<td>'.$this->formatNumber($monthResult->pvProductionKwh, 0).'</td>';
+            $html .= '<td>'.$this->formatEuro($monthResult->pvGrossRevenue).'</td>';
+            $html .= '<td>'.$this->formatEuro($monthResult->pvDirectMarketingCosts).'</td>';
             $html .= '<td>'.$this->formatEuro($monthResult->pvRevenue).'</td>';
             $html .= '<td>'.$this->formatEuro($monthResult->batteryInvestorRevenue).'</td>';
             $html .= '<td>'.$this->formatEuro($monthResult->batteryInvestorCosts).'</td>';
@@ -384,6 +405,11 @@ final class GUI_PvInvestment extends GUI_Module
     private function formatPercent(float $rate): string
     {
         return number_format($rate * 100.0, 2, ',', '.').' %';
+    }
+
+    private function formatNumber(float $amount, int $decimals = 2): string
+    {
+        return number_format($amount, $decimals, ',', '.');
     }
 
     private function escape(string $value): string

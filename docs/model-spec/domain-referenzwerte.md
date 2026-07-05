@@ -48,3 +48,5 @@ Die Domain-Werte sind reproduzierbare Erwartungswerte fuer den aktuellen Domain-
 Seit Aufgabe 14 werden diese Werte ueber den `ScenarioCalculator` aus Monatswerten berechnet und dann ueber `YearlyAggregationCalculator` zu Jahres- und Scenario-Kennzahlen verdichtet. Die anonymisierten Erwartungswerte mussten bei der Umstellung nicht angepasst werden.
 
 Seit Aufgabe 15 unterstuetzt die Monatsengine Batterie-Capex, Batterie-Degradation und Batterie-Ersatzinvestitionen. Die oeffentlichen Referenzszenarien enthalten dafuer keine nicht-null Werte; deshalb mussten die Domain-Referenzwerte nicht angepasst werden.
+
+Seit Aufgabe 19 berechnet der Standardpfad PV-Erloese aus Produktion, Strompreis und Direktvermarktungskosten. Die bestehenden oeffentlichen Referenzfixtures verwenden weiter den anonymisierten Legacy-Jahreserloes; dieser bleibt als Kompatibilitaets-Override erhalten. Deshalb mussten die Domain-Referenzwerte fuer diese Fixtures nicht angepasst werden.
